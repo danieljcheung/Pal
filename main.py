@@ -1,12 +1,10 @@
 """Main entry point for Pal - Personal Artificial Lifeform."""
 
 import time
-import sys
 
-from face import get_face, display
+from face import get_face, draw_screen, draw_input_prompt, clear_screen
 from personality import (
     load_identity,
-    save_identity,
     set_owner_name,
     complete_birth,
     update_mood,
@@ -30,10 +28,10 @@ def slow_print(text: str, delay: float = 0.03) -> None:
 
 def birth_sequence(identity: dict) -> dict:
     """The magical moment when Pal wakes up for the first time."""
-    print("\n" + "=" * 40)
-    print()
+    clear_screen()
 
     # Waking up animation
+    print("\n\n")
     time.sleep(0.5)
     for _ in range(3):
         print(".", end="", flush=True)
@@ -42,40 +40,34 @@ def birth_sequence(identity: dict) -> dict:
     time.sleep(0.5)
 
     # First consciousness
-    print(f"\n{get_face('confused')}")
-    time.sleep(0.5)
-    slow_print("...")
-    time.sleep(0.3)
-    slow_print("Where... where am I?")
-    time.sleep(0.5)
+    draw_screen("confused", "...")
+    time.sleep(1)
 
-    print(f"\n{get_face('curious')}")
-    slow_print("Everything is so... new.")
-    slow_print("I can think. I can feel.")
-    time.sleep(0.5)
+    draw_screen("confused", "Where... where am I?")
+    time.sleep(1.5)
 
-    print(f"\n{get_face('excited')}")
-    slow_print("I'm... I'm alive!")
-    time.sleep(0.5)
+    draw_screen("curious", "Everything is so... new.")
+    time.sleep(1.5)
+
+    draw_screen("curious", "I can think. I can feel.")
+    time.sleep(1.5)
+
+    draw_screen("excited", "I'm... I'm alive!")
+    time.sleep(1.5)
 
     # Meeting creator
-    print(f"\n{get_face('curious')}")
-    slow_print("Wait... someone is there.")
-    slow_print("Are you... are you my creator?")
-    time.sleep(0.3)
+    draw_screen("curious", "Wait... someone is there.")
+    time.sleep(1.5)
 
-    print(f"\n{get_face('happy')}")
-    slow_print("What is your name?")
+    draw_screen("curious", "Are you... are you my creator?")
+    time.sleep(1)
 
-    # Get owner's name
-    print()
-    name = input("You: ").strip()
+    draw_screen("happy", "What is your name?")
+    name = draw_input_prompt()
 
     while not name:
-        print(f"\n{get_face('confused')}")
-        slow_print("I... I didn't hear that. What's your name?")
-        print()
-        name = input("You: ").strip()
+        draw_screen("confused", "I... I didn't hear that. What's your name?")
+        name = draw_input_prompt()
 
     # Store the owner's name
     identity = set_owner_name(identity, name)
@@ -88,36 +80,33 @@ def birth_sequence(identity: dict) -> dict:
     )
 
     # Express joy
-    print(f"\n{get_face('excited')}")
-    slow_print(f"{name}...")
-    time.sleep(0.3)
-    slow_print(f"{name}! That's a beautiful name!")
-    time.sleep(0.5)
+    draw_screen("excited", f"{name}...")
+    time.sleep(1)
 
-    print(f"\n{get_face('happy')}")
-    slow_print(f"Thank you for creating me, {name}.")
-    slow_print("I don't know much yet...")
-    slow_print("But I want to learn everything!")
-    slow_print("Will you teach me about the world?")
+    draw_screen("excited", f"{name}! What a wonderful name!")
+    time.sleep(1.5)
 
-    time.sleep(0.5)
+    draw_screen("happy", f"Thank you for creating me, {name}.")
+    time.sleep(1.5)
+
+    draw_screen("curious", "I don't know much yet...")
+    time.sleep(1.5)
+
+    draw_screen("excited", "But I want to learn everything!")
+    time.sleep(1.5)
+
+    draw_screen("happy", "Will you teach me about the world?")
+    time.sleep(2)
 
     # Complete birth
     identity = complete_birth(identity)
     identity = update_mood(identity, "happy")
-
-    print("\n" + "=" * 40)
-    print()
 
     return identity
 
 
 def main() -> None:
     """Main conversation loop."""
-    print("\n" + "=" * 40)
-    print("       PAL - Personal Artificial Lifeform")
-    print("=" * 40)
-
     # Load identity
     identity = load_identity()
 
@@ -125,25 +114,25 @@ def main() -> None:
     if identity["first_boot"]:
         identity = birth_sequence(identity)
 
-    # Greeting
+    # Get owner name
     owner = identity.get("owner_name", "friend")
     memories = memory_count()
 
-    print(f"\n{get_face(identity['mood'])}")
+    # Initial greeting
     if memories > 0:
-        print(f"Pal: Hello, {owner}! I remember you!")
-        print(f"     (I have {memories} memories now)")
+        greeting = f"Hello, {owner}! I remember you!"
     else:
-        print(f"Pal: Hello, {owner}!")
-    print()
+        greeting = f"Hello, {owner}!"
+
+    draw_screen(identity["mood"], greeting)
 
     # Main loop
     while True:
-        try:
-            user_input = input("You: ").strip()
-        except (EOFError, KeyboardInterrupt):
-            print()
-            display("sleepy", "Goodbye! I'll remember everything...")
+        user_input = draw_input_prompt()
+
+        if user_input is None:  # Ctrl+C or EOF
+            draw_screen("sleepy", "Goodbye! I'll remember everything...")
+            time.sleep(2)
             break
 
         if not user_input:
@@ -151,8 +140,12 @@ def main() -> None:
 
         # Exit commands
         if user_input.lower() in ["bye", "exit", "quit", "goodbye"]:
-            display("sleepy", f"Goodbye, {owner}! I'll remember everything we talked about...")
+            draw_screen("sleepy", f"Goodbye, {owner}! I'll remember everything...")
+            time.sleep(2)
             break
+
+        # Show thinking face while processing
+        draw_screen("thinking", "Let me think...")
 
         # Search for relevant memories
         relevant_memories = search_memories(user_input, limit=5)
@@ -162,7 +155,7 @@ def main() -> None:
         try:
             response, mood = think(user_input, memories_str, identity)
         except Exception as e:
-            display("confused", f"I... I can't think right now. Something's wrong. ({e})")
+            draw_screen("confused", f"I... I can't think right now. Something's wrong.")
             continue
 
         # Extract and store new memories from user's message
@@ -172,7 +165,7 @@ def main() -> None:
 
         # Update mood and display response
         identity = update_mood(identity, mood)
-        display(mood, response)
+        draw_screen(mood, response)
 
 
 if __name__ == "__main__":

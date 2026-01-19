@@ -44,7 +44,7 @@ Early development. Currently:
 - [x] Identity/personality state
 - [x] Birth sequence
 - [x] Conversation loop
-- [ ] Persistent kaomoji face
+- [x] Persistent kaomoji face
 - [ ] Voice
 - [ ] Cross-device sync
 - [ ] Hardware body (Raspberry Pi)
