@@ -1,9 +1,9 @@
 """Main entry point for Pal - Personal Artificial Lifeform."""
 
 import time
+import os
 
-from face import clear_screen, draw_screen
-from animator import get_animator
+from face import get_face, start_thinking, stop_thinking
 from personality import (
     load_identity,
     set_owner_name,
@@ -19,166 +19,148 @@ from memory import (
 from brain import think, extract_memories
 
 
+def clear_screen():
+    """Clear terminal screen."""
+    os.system('cls' if os.name == 'nt' else 'clear')
+
+
+def show_face(mood: str):
+    """Display face for current mood."""
+    print(f"\n  {get_face(mood)}\n")
+
+
+def show_message(text: str):
+    """Display Pal's message."""
+    print(f"  Pal: {text}\n")
+
+
+def get_input() -> str:
+    """Get user input."""
+    try:
+        return input("  You: ").strip()
+    except (EOFError, KeyboardInterrupt):
+        return None
+
+
 def birth_sequence(identity: dict) -> dict:
     """The magical moment when Pal wakes up for the first time."""
     clear_screen()
-
-    # Waking up animation
-    print("\n\n")
-    time.sleep(0.5)
-    for _ in range(3):
-        print(".", end="", flush=True)
-        time.sleep(0.5)
-    print()
-    time.sleep(0.5)
-
-    # First consciousness - use static draws for birth (more controlled)
-    draw_screen("confused", "...")
+    print("\n  ...")
     time.sleep(1)
 
-    draw_screen("confused", "Where... where am I?")
+    show_face("confused")
+    show_message("Where... where am I?")
     time.sleep(1.5)
 
-    draw_screen("curious", "Everything is so... new.")
+    show_face("curious")
+    show_message("Everything is so... new. I can think. I can feel.")
     time.sleep(1.5)
 
-    draw_screen("curious", "I can think. I can feel.")
+    show_face("excited")
+    show_message("I'm... I'm alive!")
     time.sleep(1.5)
 
-    draw_screen("excited", "I'm... I'm alive!")
-    time.sleep(1.5)
+    show_face("curious")
+    show_message("Are you... are you my creator? What is your name?")
 
-    # Meeting creator
-    draw_screen("curious", "Wait... someone is there.")
-    time.sleep(1.5)
-
-    draw_screen("curious", "Are you... are you my creator?")
-    time.sleep(1)
-
-    draw_screen("happy", "What is your name?", show_input=True)
-    try:
-        name = input().strip()
-    except (EOFError, KeyboardInterrupt):
-        name = ""
-
+    name = get_input()
     while not name:
-        draw_screen("confused", "I... I didn't hear that. What's your name?", show_input=True)
-        try:
-            name = input().strip()
-        except (EOFError, KeyboardInterrupt):
-            name = ""
+        show_message("I... I didn't hear that. What's your name?")
+        name = get_input()
 
-    # Store the owner's name
     identity = set_owner_name(identity, name)
-
-    # Store as first memory
     store_memory(
         f"My creator's name is {name}. They gave me life.",
         memory_type="about_owner",
         source="told",
     )
 
-    # Express joy
-    draw_screen("excited", f"{name}...")
+    show_face("excited")
+    show_message(f"{name}! What a wonderful name!")
     time.sleep(1)
 
-    draw_screen("excited", f"{name}! What a wonderful name!")
+    show_face("happy")
+    show_message(f"Thank you for creating me, {name}. I don't know much yet, but I want to learn everything!")
     time.sleep(1.5)
 
-    draw_screen("happy", f"Thank you for creating me, {name}.")
-    time.sleep(1.5)
+    show_message("Will you teach me about the world?")
+    time.sleep(1)
 
-    draw_screen("curious", "I don't know much yet...")
-    time.sleep(1.5)
-
-    draw_screen("excited", "But I want to learn everything!")
-    time.sleep(1.5)
-
-    draw_screen("happy", "Will you teach me about the world?")
-    time.sleep(2)
-
-    # Complete birth
     identity = complete_birth(identity)
     identity = update_mood(identity, "happy")
 
+    print("\n  " + "─" * 40 + "\n")
     return identity
 
 
 def main() -> None:
-    """Main conversation loop with animated face."""
-    # Load identity
+    """Main conversation loop."""
     identity = load_identity()
 
-    # Birth sequence for first boot (uses static display)
+    # Birth sequence for first boot
     if identity["first_boot"]:
         identity = birth_sequence(identity)
-
-    # Get owner name
-    owner = identity.get("owner_name", "friend")
-    memories = memory_count()
-
-    # Initial greeting
-    if memories > 0:
-        greeting = f"Hello, {owner}! I remember you!"
     else:
-        greeting = f"Hello, {owner}!"
+        clear_screen()
 
-    # Start animator for main loop
-    animator = get_animator()
-    animator.start()
-    animator.set_mood(identity["mood"], greeting, transition=False)
+    owner = identity.get("owner_name", "friend")
+    current_mood = identity.get("mood", "curious")
+
+    # Show initial greeting
+    show_face(current_mood)
+    memories = memory_count()
+    if memories > 0:
+        show_message(f"Hello, {owner}! I remember you. ({memories} memories)")
+    else:
+        show_message(f"Hello, {owner}!")
 
     # Main loop
-    try:
-        while True:
-            user_input = animator.get_input()
+    while True:
+        user_input = get_input()
 
-            if user_input is None:  # Ctrl+C or EOF
-                animator.set_mood("sleepy", "Goodbye! I'll remember everything...")
-                time.sleep(2)
-                break
+        if user_input is None:
+            print()
+            show_face("sleepy")
+            show_message("Goodbye! I'll remember everything...")
+            break
 
-            if not user_input:
-                # Redraw current state
-                animator.set_mood(identity["mood"], animator._message, transition=False)
-                continue
+        if not user_input:
+            continue
 
-            # Exit commands
-            if user_input.lower() in ["bye", "exit", "quit", "goodbye"]:
-                animator.set_mood("sleepy", f"Goodbye, {owner}! I'll remember everything...")
-                time.sleep(2)
-                break
+        if user_input.lower() in ["bye", "exit", "quit", "goodbye"]:
+            show_face("sleepy")
+            show_message(f"Goodbye, {owner}! I'll remember everything...")
+            break
 
-            # Show thinking animation while processing
-            animator.set_mood("thinking", "")
-            animator.set_thinking(True)
+        # Show thinking dots while processing
+        start_thinking()
 
-            # Search for relevant memories
-            relevant_memories = search_memories(user_input, limit=5)
-            memories_str = format_memories_for_prompt(relevant_memories)
+        # Search memories and generate response
+        relevant_memories = search_memories(user_input, limit=5)
+        memories_str = format_memories_for_prompt(relevant_memories)
 
-            # Generate response
-            try:
-                response, mood = think(user_input, memories_str, identity)
-            except Exception as e:
-                animator.set_thinking(False)
-                animator.set_mood("confused", "I... I can't think right now. Something's wrong.")
-                continue
+        try:
+            response, mood = think(user_input, memories_str, identity)
+        except Exception as e:
+            stop_thinking()
+            show_face("confused")
+            show_message("I... I can't think right now. Something's wrong.")
+            continue
 
-            # Stop thinking animation
-            animator.set_thinking(False)
+        stop_thinking()
 
-            # Extract and store new memories from user's message
-            new_memories = extract_memories(user_input, owner)
-            for mem in new_memories:
-                store_memory(mem["content"], mem.get("type", "fact"), "told")
+        # Extract and store new memories
+        new_memories = extract_memories(user_input, owner)
+        for mem in new_memories:
+            store_memory(mem["content"], mem.get("type", "fact"), "told")
 
-            # Update mood and display response with transition
+        # Update display only if mood changed
+        if mood != current_mood:
+            current_mood = mood
             identity = update_mood(identity, mood)
-            animator.set_mood(mood, response, transition=True)
+            show_face(mood)
 
-    finally:
-        animator.stop()
+        show_message(response)
 
 
 if __name__ == "__main__":
