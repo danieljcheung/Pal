@@ -1,0 +1,4 @@
+ollama
+lancedb
+sentence-transformers
+pyarrow
