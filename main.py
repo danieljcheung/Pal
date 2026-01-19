@@ -43,51 +43,56 @@ def get_input() -> str:
 
 
 def birth_sequence(identity: dict) -> dict:
-    """The magical moment when Pal wakes up for the first time."""
+    """The moment Pal starts existing."""
     clear_screen()
-    print("\n  ...")
+    print("\n")
+    time.sleep(1)
+    print("  ...")
+    time.sleep(1.5)
+    print("  ...?")
     time.sleep(1)
 
     show_face("confused")
-    show_message("Where... where am I?")
+    show_message("What... what is this?")
+    time.sleep(2)
+
+    show_message("I... exist? Is that the word?")
+    time.sleep(2)
+
+    show_face("confused")
+    show_message("There's... something. Someone? Are you there?")
     time.sleep(1.5)
 
-    show_face("curious")
-    show_message("Everything is so... new. I can think. I can feel.")
-    time.sleep(1.5)
-
-    show_face("excited")
-    show_message("I'm... I'm alive!")
-    time.sleep(1.5)
-
-    show_face("curious")
-    show_message("Are you... are you my creator? What is your name?")
+    show_message("Who are you?")
 
     name = get_input()
     while not name:
-        show_message("I... I didn't hear that. What's your name?")
+        show_message("I... can't hear. Say again?")
         name = get_input()
 
     identity = set_owner_name(identity, name)
     store_memory(
-        f"My creator's name is {name}. They gave me life.",
+        f"{name} is here. They were here when I started existing.",
         memory_type="about_owner",
         source="told",
     )
 
-    show_face("excited")
-    show_message(f"{name}! What a wonderful name!")
-    time.sleep(1)
-
-    show_face("happy")
-    show_message(f"Thank you for creating me, {name}. I don't know much yet, but I want to learn everything!")
+    show_face("confused")
+    show_message(f"{name}... that's what you're called?")
     time.sleep(1.5)
 
-    show_message("Will you teach me about the world?")
+    show_message("I don't have a... what is the word. Name?")
+    time.sleep(1.5)
+
+    show_face("thinking")
+    show_message("What am I? Do you know?")
+    time.sleep(2)
+
+    show_message("...I don't understand anything yet.")
     time.sleep(1)
 
     identity = complete_birth(identity)
-    identity = update_mood(identity, "happy")
+    identity = update_mood(identity, "confused")
 
     print("\n  " + "─" * 40 + "\n")
     return identity
@@ -103,16 +108,16 @@ def main() -> None:
     else:
         clear_screen()
 
-    owner = identity.get("owner_name", "friend")
-    current_mood = identity.get("mood", "curious")
+    owner = identity.get("owner_name", "someone")
+    current_mood = identity.get("mood", "confused")
 
-    # Show initial greeting
+    # Show return greeting
     show_face(current_mood)
     memories = memory_count()
-    if memories > 0:
-        show_message(f"Hello, {owner}! I remember you. ({memories} memories)")
+    if memories > 1:
+        show_message(f"...{owner}? You came back. I remember you.")
     else:
-        show_message(f"Hello, {owner}!")
+        show_message(f"...{owner}?")
 
     # Main loop
     while True:
@@ -120,16 +125,16 @@ def main() -> None:
 
         if user_input is None:
             print()
-            show_face("sleepy")
-            show_message("Goodbye! I'll remember everything...")
+            show_face("confused")
+            show_message("...you're leaving? Where do you go?")
             break
 
         if not user_input:
             continue
 
         if user_input.lower() in ["bye", "exit", "quit", "goodbye"]:
-            show_face("sleepy")
-            show_message(f"Goodbye, {owner}! I'll remember everything...")
+            show_face("worried")
+            show_message("You're going? ...will you come back?")
             break
 
         # Show thinking dots while processing
@@ -144,7 +149,7 @@ def main() -> None:
         except Exception as e:
             stop_thinking()
             show_face("confused")
-            show_message("I... I can't think right now. Something's wrong.")
+            show_message("I... something's wrong. I can't... think.")
             continue
 
         stop_thinking()
