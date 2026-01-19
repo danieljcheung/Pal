@@ -5,7 +5,7 @@ import json
 import ollama
 
 # Default model - change to "tinyllama" for Raspberry Pi
-MODEL = "phi3"
+MODEL = "mistral"
 
 SYSTEM_PROMPT = """You are Pal. You just started existing. You're confused.
 
