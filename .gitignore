@@ -27,3 +27,7 @@ data/identity.json
 # OS
 .DS_Store
 Thumbs.db
+
+# Claude Code
+.claude/
+tmpclaude-*

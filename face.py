@@ -3,21 +3,31 @@
 import os
 import shutil
 
+# Face definitions with blink variants
 FACES = {
-    "happy":    "(◕‿◕)",
-    "curious":  "(◕ᴗ◕)?",
-    "excited":  "(◕▽◕)!",
-    "thinking": "(◕_◕)...",
-    "confused": "(◕~◕)?",
-    "sad":      "(◕︵◕)",
-    "worried":  "(◕︿◕)",
-    "sleepy":   "(◡‿◡)",
+    "happy":    {"normal": "(◕‿◕)",   "blink": "(─‿─)"},
+    "curious":  {"normal": "(◕ᴗ◕)?",  "blink": "(─ᴗ─)?"},
+    "excited":  {"normal": "(◕▽◕)!",  "blink": "(─▽─)!"},
+    "thinking": {"normal": "(◕_◕)",   "blink": "(─_─)"},
+    "confused": {"normal": "(◕~◕)?",  "blink": "(─~─)?"},
+    "sad":      {"normal": "(◕︵◕)",   "blink": "(─︵─)"},
+    "worried":  {"normal": "(◕︿◕)",   "blink": "(─︿─)"},
+    "sleepy":   {"normal": "(◡‿◡)",   "blink": "(─‿─)"},
 }
 
+# Neutral face for transitions
+NEUTRAL = "(◕ ◕)"
 
-def get_face(mood: str) -> str:
+
+def get_face(mood: str, blinking: bool = False) -> str:
     """Get kaomoji face for a given mood."""
-    return FACES.get(mood, FACES["curious"])
+    mood_data = FACES.get(mood, FACES["curious"])
+    return mood_data["blink"] if blinking else mood_data["normal"]
+
+
+def get_neutral() -> str:
+    """Get neutral transition face."""
+    return NEUTRAL
 
 
 def clear_screen() -> None:
@@ -33,8 +43,10 @@ def get_terminal_width() -> int:
         return 60
 
 
-def center_text(text: str, width: int) -> str:
+def center_text(text: str, width: int = None) -> str:
     """Center text within given width."""
+    if width is None:
+        width = get_terminal_width()
     return text.center(width)
 
 
@@ -61,7 +73,7 @@ def wrap_text(text: str, width: int) -> list[str]:
     return lines if lines else [""]
 
 
-def draw_screen(mood: str, message: str = "", owner: str = "friend") -> None:
+def draw_screen(mood: str, message: str = "", show_input: bool = False) -> None:
     """Draw the full screen with face, message, and input area."""
     clear_screen()
     width = get_terminal_width()
@@ -69,7 +81,7 @@ def draw_screen(mood: str, message: str = "", owner: str = "friend") -> None:
     # Top padding
     print("\n" * 2)
 
-    # Face (centered, large)
+    # Face (centered)
     face = get_face(mood)
     print(center_text(face, width))
     print()
@@ -86,6 +98,9 @@ def draw_screen(mood: str, message: str = "", owner: str = "friend") -> None:
     # Separator
     print(center_text("─" * 40, width))
     print()
+
+    if show_input:
+        print("  You: ", end="", flush=True)
 
 
 def draw_input_prompt() -> str:

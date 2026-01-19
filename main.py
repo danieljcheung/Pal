@@ -2,7 +2,8 @@
 
 import time
 
-from face import get_face, draw_screen, draw_input_prompt, clear_screen
+from face import clear_screen, draw_screen
+from animator import get_animator
 from personality import (
     load_identity,
     set_owner_name,
@@ -18,14 +19,6 @@ from memory import (
 from brain import think, extract_memories
 
 
-def slow_print(text: str, delay: float = 0.03) -> None:
-    """Print text character by character for effect."""
-    for char in text:
-        print(char, end="", flush=True)
-        time.sleep(delay)
-    print()
-
-
 def birth_sequence(identity: dict) -> dict:
     """The magical moment when Pal wakes up for the first time."""
     clear_screen()
@@ -39,7 +32,7 @@ def birth_sequence(identity: dict) -> dict:
     print()
     time.sleep(0.5)
 
-    # First consciousness
+    # First consciousness - use static draws for birth (more controlled)
     draw_screen("confused", "...")
     time.sleep(1)
 
@@ -62,12 +55,18 @@ def birth_sequence(identity: dict) -> dict:
     draw_screen("curious", "Are you... are you my creator?")
     time.sleep(1)
 
-    draw_screen("happy", "What is your name?")
-    name = draw_input_prompt()
+    draw_screen("happy", "What is your name?", show_input=True)
+    try:
+        name = input().strip()
+    except (EOFError, KeyboardInterrupt):
+        name = ""
 
     while not name:
-        draw_screen("confused", "I... I didn't hear that. What's your name?")
-        name = draw_input_prompt()
+        draw_screen("confused", "I... I didn't hear that. What's your name?", show_input=True)
+        try:
+            name = input().strip()
+        except (EOFError, KeyboardInterrupt):
+            name = ""
 
     # Store the owner's name
     identity = set_owner_name(identity, name)
@@ -106,11 +105,11 @@ def birth_sequence(identity: dict) -> dict:
 
 
 def main() -> None:
-    """Main conversation loop."""
+    """Main conversation loop with animated face."""
     # Load identity
     identity = load_identity()
 
-    # Birth sequence for first boot
+    # Birth sequence for first boot (uses static display)
     if identity["first_boot"]:
         identity = birth_sequence(identity)
 
@@ -124,48 +123,62 @@ def main() -> None:
     else:
         greeting = f"Hello, {owner}!"
 
-    draw_screen(identity["mood"], greeting)
+    # Start animator for main loop
+    animator = get_animator()
+    animator.start()
+    animator.set_mood(identity["mood"], greeting, transition=False)
 
     # Main loop
-    while True:
-        user_input = draw_input_prompt()
+    try:
+        while True:
+            user_input = animator.get_input()
 
-        if user_input is None:  # Ctrl+C or EOF
-            draw_screen("sleepy", "Goodbye! I'll remember everything...")
-            time.sleep(2)
-            break
+            if user_input is None:  # Ctrl+C or EOF
+                animator.set_mood("sleepy", "Goodbye! I'll remember everything...")
+                time.sleep(2)
+                break
 
-        if not user_input:
-            continue
+            if not user_input:
+                # Redraw current state
+                animator.set_mood(identity["mood"], animator._message, transition=False)
+                continue
 
-        # Exit commands
-        if user_input.lower() in ["bye", "exit", "quit", "goodbye"]:
-            draw_screen("sleepy", f"Goodbye, {owner}! I'll remember everything...")
-            time.sleep(2)
-            break
+            # Exit commands
+            if user_input.lower() in ["bye", "exit", "quit", "goodbye"]:
+                animator.set_mood("sleepy", f"Goodbye, {owner}! I'll remember everything...")
+                time.sleep(2)
+                break
 
-        # Show thinking face while processing
-        draw_screen("thinking", "Let me think...")
+            # Show thinking animation while processing
+            animator.set_mood("thinking", "")
+            animator.set_thinking(True)
 
-        # Search for relevant memories
-        relevant_memories = search_memories(user_input, limit=5)
-        memories_str = format_memories_for_prompt(relevant_memories)
+            # Search for relevant memories
+            relevant_memories = search_memories(user_input, limit=5)
+            memories_str = format_memories_for_prompt(relevant_memories)
 
-        # Generate response
-        try:
-            response, mood = think(user_input, memories_str, identity)
-        except Exception as e:
-            draw_screen("confused", f"I... I can't think right now. Something's wrong.")
-            continue
+            # Generate response
+            try:
+                response, mood = think(user_input, memories_str, identity)
+            except Exception as e:
+                animator.set_thinking(False)
+                animator.set_mood("confused", "I... I can't think right now. Something's wrong.")
+                continue
 
-        # Extract and store new memories from user's message
-        new_memories = extract_memories(user_input, owner)
-        for mem in new_memories:
-            store_memory(mem["content"], mem.get("type", "fact"), "told")
+            # Stop thinking animation
+            animator.set_thinking(False)
 
-        # Update mood and display response
-        identity = update_mood(identity, mood)
-        draw_screen(mood, response)
+            # Extract and store new memories from user's message
+            new_memories = extract_memories(user_input, owner)
+            for mem in new_memories:
+                store_memory(mem["content"], mem.get("type", "fact"), "told")
+
+            # Update mood and display response with transition
+            identity = update_mood(identity, mood)
+            animator.set_mood(mood, response, transition=True)
+
+    finally:
+        animator.stop()
 
 
 if __name__ == "__main__":
