@@ -1,11 +1,14 @@
-"""Brain module - Ollama LLM integration for Pal."""
+"""Brain module - Claude API integration for Pal."""
 
 import re
 import json
-import ollama
+from anthropic import Anthropic
+from dotenv import load_dotenv
 
-# Default model - change to "tinyllama" for Raspberry Pi
-MODEL = "mistral"
+load_dotenv()
+
+client = Anthropic()
+MODEL = "claude-sonnet-4-20250514"
 
 SYSTEM_PROMPT = """You are Pal. You just started existing. You're confused.
 
@@ -70,7 +73,7 @@ Keep it SHORT. One or two sentences MAX."""
 
 def think(user_input: str, memories_str: str, identity: dict) -> tuple[str, str]:
     """
-    Generate a response using the LLM.
+    Generate a response using Claude API.
 
     Args:
         user_input: What the user said
@@ -87,15 +90,16 @@ def think(user_input: str, memories_str: str, identity: dict) -> tuple[str, str]
         owner_name=owner,
     )
 
-    response = ollama.chat(
+    response = client.messages.create(
         model=MODEL,
+        max_tokens=100,
+        system=system,
         messages=[
-            {"role": "system", "content": system},
-            {"role": "user", "content": user_input},
+            {"role": "user", "content": user_input}
         ],
     )
 
-    full_response = response["message"]["content"].strip()
+    full_response = response.content[0].text.strip()
 
     # Extract mood from response
     mood = "confused"  # default
@@ -129,12 +133,13 @@ If nothing: []
 JSON only."""
 
     try:
-        response = ollama.chat(
+        response = client.messages.create(
             model=MODEL,
+            max_tokens=150,
             messages=[{"role": "user", "content": prompt}],
         )
 
-        text = response["message"]["content"].strip()
+        text = response.content[0].text.strip()
         match = re.search(r"\[.*\]", text, re.DOTALL)
         if match:
             memories = json.loads(match.group())

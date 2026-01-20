@@ -1,4 +1,5 @@
-ollama
+anthropic
+python-dotenv
 lancedb
 sentence-transformers
 pyarrow
