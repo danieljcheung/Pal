@@ -142,27 +142,9 @@ def search_memories(query: str, limit: int = 5) -> list[dict]:
 
 
 def get_all_memories() -> list[dict]:
-    """Get all stored memories."""
-    table = _get_table()
-
-    if table.count_rows() == 0:
-        return []
-
-    results = table.to_pandas().to_dict("records")
-
-    memories = []
-    for r in results:
-        memories.append(
-            {
-                "id": r["id"],
-                "content": r["content"],
-                "type": r["type"],
-                "source": r["source"],
-                "timestamp": r["timestamp"],
-            }
-        )
-
-    return memories
+    """Get all stored memories by searching with empty-ish query."""
+    # Use search with high limit as workaround for listing all
+    return search_memories("", limit=100)
 
 
 def memory_count() -> int:
