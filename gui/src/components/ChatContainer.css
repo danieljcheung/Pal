@@ -1,0 +1,35 @@
+/* ChatContainer Styles */
+
+.chat-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+  width: 100%;
+  padding: 20px;
+  gap: 16px;
+}
+
+.chat-container__face {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 120px;
+}
+
+.chat-container__message {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 60px;
+  width: 100%;
+}
+
+.chat-container__input {
+  flex: 0 0 auto;
+  margin-top: auto;
+  padding-top: 20px;
+}

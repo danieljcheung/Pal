@@ -1,0 +1,62 @@
+/* ChatInput Styles */
+
+.chat-input {
+  /* Glass effect */
+  background: rgba(255, 255, 255, 0.05);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+
+  /* Layout */
+  padding: 10px 20px;
+  min-width: 140px;
+  max-width: 400px;
+
+  /* Transitions */
+  transition: all 0.3s ease;
+  cursor: pointer;
+}
+
+.chat-input:hover:not(.chat-input--expanded):not(.chat-input--disabled) {
+  background: rgba(255, 255, 255, 0.08);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.chat-input--expanded {
+  min-width: 300px;
+  cursor: text;
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.chat-input--disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.chat-input__placeholder {
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.9rem;
+  color: rgba(255, 255, 255, 0.4);
+  user-select: none;
+}
+
+.chat-input input {
+  width: 100%;
+  background: transparent;
+  border: none;
+  outline: none;
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 0.95rem;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.chat-input input::placeholder {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Focus ring for accessibility */
+.chat-input:focus-within {
+  border-color: rgba(255, 255, 255, 0.25);
+  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+}
