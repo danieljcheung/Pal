@@ -227,8 +227,20 @@ async def chat_stream(request: ChatRequest):
                 buffer += chunk
 
                 # The mood tag [mood:xxx] is always at the end of the response
-                # Hold back any text that might be the start of the mood tag
-                # Look for '[' and hold back everything from there
+                # Strategy: hold back any text that could be the start of a mood tag
+
+                # First, check if buffer contains a complete mood tag
+                mood_match = re.search(r"\[mood:\w+\]", buffer)
+                if mood_match:
+                    # Complete mood tag found - send text before it, clear buffer
+                    send_text = buffer[:mood_match.start()].rstrip()
+                    buffer = ""
+                    if send_text:
+                        yield f"data: {json.dumps({'type': 'chunk', 'text': send_text})}\n\n"
+                    continue
+
+                # Look for potential partial mood tag at the end
+                # Check for any of: [, [m, [mo, [moo, [mood, [mood:, [mood:x...
                 bracket_pos = buffer.rfind('[')
 
                 if bracket_pos == -1:
@@ -236,18 +248,22 @@ async def chat_stream(request: ChatRequest):
                     send_text = buffer
                     buffer = ""
                 else:
-                    # Found bracket - check if it could be mood tag
+                    # Found bracket - check if it could be start of mood tag
                     potential_tag = buffer[bracket_pos:]
-                    if potential_tag.startswith("[mood:") and "]" in potential_tag:
-                        # Complete mood tag found - send text before it, discard tag
-                        send_text = buffer[:bracket_pos].rstrip()
-                        buffer = ""
-                    elif "[mood:"[:len(potential_tag)] == potential_tag or potential_tag.startswith("[mood:"):
-                        # Partial mood tag - hold it back
+                    mood_prefix = "[mood:"
+
+                    # Check if this could be the start of [mood:...]
+                    is_potential_mood_tag = (
+                        len(potential_tag) <= len(mood_prefix) and
+                        mood_prefix.startswith(potential_tag)
+                    ) or potential_tag.startswith(mood_prefix)
+
+                    if is_potential_mood_tag:
+                        # Hold back the potential tag
                         send_text = buffer[:bracket_pos]
                         buffer = potential_tag
                     else:
-                        # Not a mood tag bracket, safe to send
+                        # Not a mood tag, safe to send
                         send_text = buffer
                         buffer = ""
 

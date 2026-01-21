@@ -7,6 +7,11 @@ import "./ChatContainer.css";
 
 type WindowMode = "full" | "widget" | "floating";
 
+// Strip mood tags from text (safety net for client-side)
+function stripMoodTag(text: string): string {
+  return text.replace(/\s*\[mood:\w+\]\s*/g, "").trim();
+}
+
 interface Message {
   id: string;
   text: string;
@@ -99,9 +104,11 @@ function ChatContainer({
           }
 
           streamingTextRef.current += chunk;
+          // Strip any mood tags that slip through (safety net)
+          const cleanText = stripMoodTag(streamingTextRef.current);
           setCurrentMessage({
             id: messageId,
-            text: streamingTextRef.current,
+            text: cleanText,
             from: "pal",
           });
         },
