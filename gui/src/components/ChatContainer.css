@@ -34,13 +34,12 @@
 }
 
 .chat-container__message {
-  flex: 0 0 auto;
+  flex: 0 1 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   min-height: 24px;
-  max-height: 40px;
 }
 
 .chat-container__input {
