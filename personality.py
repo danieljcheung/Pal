@@ -47,6 +47,14 @@ DEFAULT_SKILLS = {
     "concern": {"unlocked": False, "level": 0, "uses": 0},
 }
 
+DEFAULT_CONVERSATION_STATE = {
+    "current_topic": None,
+    "topic_resolved": False,
+    "topics_discussed": [],
+    "questions_asked_this_session": [],
+    "last_responses": [],
+}
+
 
 def ensure_data_dir() -> None:
     """Create data directory if it doesn't exist."""
@@ -72,7 +80,7 @@ def load_identity() -> dict:
 
 
 def ensure_stats_and_skills(identity: dict) -> dict:
-    """Ensure identity has stats and skills initialized."""
+    """Ensure identity has stats, skills, and conversation state initialized."""
     # Initialize stats if missing
     if "stats" not in identity:
         identity["stats"] = DEFAULT_STATS.copy()
@@ -84,6 +92,10 @@ def ensure_stats_and_skills(identity: dict) -> dict:
         for skill_name, skill_data in DEFAULT_SKILLS.items():
             identity["skills"][skill_name] = skill_data.copy()
 
+    # Initialize conversation state if missing
+    if "conversation_state" not in identity:
+        identity["conversation_state"] = DEFAULT_CONVERSATION_STATE.copy()
+
     # Ensure all stats exist (for upgrades)
     for key, value in DEFAULT_STATS.items():
         if key not in identity["stats"]:
@@ -93,6 +105,11 @@ def ensure_stats_and_skills(identity: dict) -> dict:
     for skill_name, skill_data in DEFAULT_SKILLS.items():
         if skill_name not in identity["skills"]:
             identity["skills"][skill_name] = skill_data.copy()
+
+    # Ensure all conversation state fields exist (for upgrades)
+    for key, value in DEFAULT_CONVERSATION_STATE.items():
+        if key not in identity["conversation_state"]:
+            identity["conversation_state"][key] = value if not isinstance(value, list) else []
 
     return identity
 

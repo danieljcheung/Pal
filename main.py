@@ -26,6 +26,11 @@ from brain import think, extract_memories
 from stats import track_message, track_memory_stored, track_check_in
 from skills import check_unlocks, get_skill_notice, get_unlocked_skills
 from topics import load_topics, save_topics
+from conversation import (
+    update_conversation_state,
+    reset_session_state,
+    should_reset_session,
+)
 
 
 def clear_screen():
@@ -119,6 +124,10 @@ def main() -> None:
     else:
         clear_screen()
 
+    # Check if session should be reset (4+ hours idle)
+    if should_reset_session(identity):
+        identity = reset_session_state(identity)
+
     # Track check-in (session start)
     identity = track_check_in(identity)
     save_identity(identity)
@@ -145,6 +154,8 @@ def main() -> None:
             print()
             show_face("confused")
             show_message("...you're leaving? Where do you go?")
+            # Reset session state on exit (keep topics_discussed)
+            identity = reset_session_state(identity)
             save_identity(identity)
             break
 
@@ -154,6 +165,8 @@ def main() -> None:
         if user_input.lower() in ["bye", "exit", "quit", "goodbye"]:
             show_face("worried")
             show_message("You're going? ...will you come back?")
+            # Reset session state on exit (keep topics_discussed)
+            identity = reset_session_state(identity)
             save_identity(identity)
             break
 
@@ -182,6 +195,9 @@ def main() -> None:
 
         # Track message stats
         identity = track_message(identity, user_input, response)
+
+        # Update conversation state (topic tracking)
+        identity = update_conversation_state(identity, user_input, response)
 
         # Check for skill unlocks
         identity, newly_unlocked = check_unlocks(identity, topics)
