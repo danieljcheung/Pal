@@ -43,8 +43,25 @@ from inner_life import (
     detect_unanswered_question,
     extract_unmentioned_detail,
 )
+from idle_monitor import IdleMonitor, set_monitor
 
 DATA_DIR = Path(__file__).parent / "data"
+
+# Global state for idle notifications
+idle_notification_queue = []
+idle_monitor = None
+
+
+def on_idle_thought(thought: str):
+    """Callback when idle monitor wants to surface a thought."""
+    global idle_notification_queue
+    idle_notification_queue.append(("thought", thought))
+
+
+def on_idle_dream(dream: str):
+    """Callback when idle monitor generates a dream."""
+    global idle_notification_queue
+    idle_notification_queue.append(("dream", dream))
 
 
 def clear_screen():
@@ -280,15 +297,38 @@ def main() -> None:
     # Track newly unlocked skills to announce
     pending_skill_notices = []
 
+    # Start idle monitor for background dream generation
+    global idle_monitor
+    idle_monitor = IdleMonitor(
+        identity,
+        on_thought=on_idle_thought,
+        on_dream=on_idle_dream
+    )
+    idle_monitor.start()
+    set_monitor(idle_monitor)
+
     # Main loop
     while True:
+        # Check for idle notifications before getting input
+        global idle_notification_queue
+        while idle_notification_queue:
+            notif_type, notif_text = idle_notification_queue.pop(0)
+            if notif_type == "thought":
+                print()  # New line for visibility
+                show_message(f"...{owner}? I just thought of something. {notif_text}")
+            elif notif_type == "dream":
+                # Dreams are generated silently, shown on next interaction
+                pass
+
         user_input = get_input()
 
         if user_input is None:
             print()
             show_face("confused")
             show_message("...you're leaving? Where do you go?")
-            # Reset session state on exit (keep topics_discussed)
+            # Stop idle monitor and reset session state
+            if idle_monitor:
+                idle_monitor.stop()
             identity = reset_session_state(identity)
             save_identity(identity)
             break
@@ -296,10 +336,16 @@ def main() -> None:
         if not user_input:
             continue
 
+        # Touch idle monitor to reset idle timer
+        if idle_monitor:
+            idle_monitor.touch()
+
         if user_input.lower() in ["bye", "exit", "quit", "goodbye"]:
             show_face("worried")
             show_message("You're going? ...will you come back?")
-            # Reset session state on exit (keep topics_discussed)
+            # Stop idle monitor and reset session state
+            if idle_monitor:
+                idle_monitor.stop()
             identity = reset_session_state(identity)
             save_identity(identity)
             break
@@ -364,6 +410,10 @@ def main() -> None:
 
         # Save identity after tracking
         save_identity(identity)
+
+        # Update idle monitor with latest identity
+        if idle_monitor:
+            idle_monitor.update_identity(identity)
 
         # Update display only if mood changed
         if mood != current_mood:
