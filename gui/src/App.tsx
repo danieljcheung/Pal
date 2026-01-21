@@ -6,12 +6,28 @@ import "./App.css";
 function App() {
   const [input, setInput] = useState("");
   const [message, setMessage] = useState("Hello from Pal");
+  const [mood, setMood] = useState("curious");
+  const [isThinking, setIsThinking] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (input.trim()) {
-      // Placeholder - will connect to Python backend later
-      setMessage(`You said: "${input}"`);
+      // Show thinking state
+      setIsThinking(true);
+      setMood("thinking");
+
+      // Simulate response delay
+      setTimeout(() => {
+        setIsThinking(false);
+        setMood("happy");
+        setIsSpeaking(true);
+        setMessage(`You said: "${input}"`);
+
+        // Reset speaking state after bounce animation
+        setTimeout(() => setIsSpeaking(false), 250);
+      }, 1000);
+
       setInput("");
     }
   };
@@ -47,7 +63,7 @@ function App() {
 
       {/* Main content */}
       <div className="content">
-        <Face mood="curious" />
+        <Face mood={mood} isThinking={isThinking} isSpeaking={isSpeaking} />
         <p className="message">{message}</p>
       </div>
 

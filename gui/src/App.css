@@ -92,18 +92,6 @@ body {
   gap: 16px;
 }
 
-/* Kaomoji face */
-.face {
-  font-size: 64px;
-  line-height: 1;
-  text-align: center;
-  transition: transform 0.3s ease;
-}
-
-.face:hover {
-  transform: scale(1.05);
-}
-
 /* Message display */
 .message {
   color: var(--text-secondary);

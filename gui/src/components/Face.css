@@ -1,0 +1,91 @@
+/* Face Component Styles */
+
+.face {
+  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+  font-size: 4rem;
+  line-height: 1;
+  text-align: center;
+  color: #e8e8e8;
+  user-select: none;
+
+  /* Idle breathing animation - continuous */
+  animation: breathing 3s ease-in-out infinite;
+
+  /* GPU acceleration for smooth animations */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.face__text {
+  display: inline-block;
+
+  /* Smooth mood transitions */
+  transition: opacity 0.3s ease;
+}
+
+/* Idle breathing animation */
+@keyframes breathing {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.02);
+  }
+}
+
+/* Thinking animation - subtle side-to-side */
+.face--thinking {
+  animation: breathing 3s ease-in-out infinite, thinking 1.5s ease-in-out infinite;
+}
+
+@keyframes thinking {
+  0%, 100% {
+    transform: scale(1) translateX(0);
+  }
+  25% {
+    transform: scale(1.01) translateX(-2px);
+  }
+  50% {
+    transform: scale(1.02) translateX(0);
+  }
+  75% {
+    transform: scale(1.01) translateX(2px);
+  }
+}
+
+/* Bounce animation when speaking */
+.face--bounce {
+  animation: bounce 0.2s ease-out;
+}
+
+@keyframes bounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Responsive sizing */
+@media (max-width: 400px) {
+  .face {
+    font-size: 3rem;
+  }
+}
+
+@media (min-width: 600px) {
+  .face {
+    font-size: 5rem;
+  }
+}
+
+/* Hover effect */
+.face:hover {
+  animation-play-state: paused;
+  transform: scale(1.05);
+  transition: transform 0.2s ease;
+}
