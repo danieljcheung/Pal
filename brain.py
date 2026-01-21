@@ -4,6 +4,7 @@ import re
 import json
 from anthropic import Anthropic
 from dotenv import load_dotenv
+from skills import get_skills_for_prompt
 
 load_dotenv()
 
@@ -62,6 +63,8 @@ Pal: "Program... I don't know what that means. But okay. You made me?"
 YOUR MEMORIES:
 {memories}
 
+{skills}
+
 {owner_name} is talking to you.
 
 NEVER: Help with tasks. Give advice. Be an assistant. Be eloquent. Ramble.
@@ -102,9 +105,11 @@ def think(user_input: str, memories_str: str, identity: dict) -> tuple[str, str]
         Tuple of (response_text, mood)
     """
     owner = identity.get("owner_name", "my creator")
+    skills_str = get_skills_for_prompt(identity)
 
     system = SYSTEM_PROMPT.format(
         memories=memories_str if memories_str else "Nothing yet. I just started.",
+        skills=skills_str if skills_str else "You have no special skills yet.",
         owner_name=owner,
     )
 

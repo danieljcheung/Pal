@@ -1,7 +1,6 @@
 """Identity and personality state management for Pal."""
 
 import json
-import os
 from datetime import datetime
 from pathlib import Path
 
@@ -16,6 +15,38 @@ DEFAULT_IDENTITY = {
     "first_boot": True,
 }
 
+DEFAULT_STATS = {
+    "messages_exchanged": 0,
+    "memories_stored": 0,
+    "emotional_shares": 0,
+    "questions_asked": 0,
+    "questions_answered": 0,
+    "corrections": 0,
+    "reminders_requested": 0,
+    "reminders_delivered": 0,
+    "thought_dumps": 0,
+    "check_ins": 0,
+    "tasks_given": 0,
+    "tasks_completed": 0,
+    "first_met": None,
+    "last_interaction": None,
+    "unique_days": [],
+}
+
+DEFAULT_SKILLS = {
+    "greet": {"unlocked": False, "level": 0, "uses": 0},
+    "recall": {"unlocked": False, "level": 0, "uses": 0},
+    "remind": {"unlocked": False, "level": 0, "uses": 0},
+    "time_sense": {"unlocked": False, "level": 0, "uses": 0},
+    "notice_patterns": {"unlocked": False, "level": 0, "uses": 0},
+    "hold_thoughts": {"unlocked": False, "level": 0, "uses": 0},
+    "opinions": {"unlocked": False, "level": 0, "uses": 0},
+    "research": {"unlocked": False, "level": 0, "uses": 0},
+    "tasks": {"unlocked": False, "level": 0, "uses": 0},
+    "summarize": {"unlocked": False, "level": 0, "uses": 0},
+    "concern": {"unlocked": False, "level": 0, "uses": 0},
+}
+
 
 def ensure_data_dir() -> None:
     """Create data directory if it doesn't exist."""
@@ -28,11 +59,42 @@ def load_identity() -> dict:
 
     if IDENTITY_FILE.exists():
         with open(IDENTITY_FILE, "r") as f:
-            return json.load(f)
+            identity = json.load(f)
+            # Ensure stats and skills exist
+            identity = ensure_stats_and_skills(identity)
+            return identity
 
-    # First time - create default identity
-    save_identity(DEFAULT_IDENTITY)
-    return DEFAULT_IDENTITY.copy()
+    # First time - create default identity with stats and skills
+    identity = DEFAULT_IDENTITY.copy()
+    identity = ensure_stats_and_skills(identity)
+    save_identity(identity)
+    return identity
+
+
+def ensure_stats_and_skills(identity: dict) -> dict:
+    """Ensure identity has stats and skills initialized."""
+    # Initialize stats if missing
+    if "stats" not in identity:
+        identity["stats"] = DEFAULT_STATS.copy()
+        identity["stats"]["first_met"] = datetime.now().isoformat()
+
+    # Initialize skills if missing
+    if "skills" not in identity:
+        identity["skills"] = {}
+        for skill_name, skill_data in DEFAULT_SKILLS.items():
+            identity["skills"][skill_name] = skill_data.copy()
+
+    # Ensure all stats exist (for upgrades)
+    for key, value in DEFAULT_STATS.items():
+        if key not in identity["stats"]:
+            identity["stats"][key] = value
+
+    # Ensure all skills exist (for upgrades)
+    for skill_name, skill_data in DEFAULT_SKILLS.items():
+        if skill_name not in identity["skills"]:
+            identity["skills"][skill_name] = skill_data.copy()
+
+    return identity
 
 
 def save_identity(identity: dict) -> None:

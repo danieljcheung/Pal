@@ -11,6 +11,7 @@ if sys.platform == "win32":
 from face import get_face, start_thinking, stop_thinking
 from personality import (
     load_identity,
+    save_identity,
     set_owner_name,
     complete_birth,
     update_mood,
@@ -22,6 +23,9 @@ from memory import (
     memory_count,
 )
 from brain import think, extract_memories
+from stats import track_message, track_memory_stored, track_check_in
+from skills import check_unlocks, get_skill_notice, get_unlocked_skills
+from topics import load_topics, save_topics
 
 
 def clear_screen():
@@ -81,6 +85,7 @@ def birth_sequence(identity: dict) -> dict:
         memory_type="about_owner",
         source="told",
     )
+    identity = track_memory_stored(identity)
 
     show_face("confused")
     show_message(f"{name}... that's what you're called?")
@@ -106,12 +111,17 @@ def birth_sequence(identity: dict) -> dict:
 def main() -> None:
     """Main conversation loop."""
     identity = load_identity()
+    topics = load_topics()
 
     # Birth sequence for first boot
     if identity["first_boot"]:
         identity = birth_sequence(identity)
     else:
         clear_screen()
+
+    # Track check-in (session start)
+    identity = track_check_in(identity)
+    save_identity(identity)
 
     owner = identity.get("owner_name", "someone")
     current_mood = identity.get("mood", "confused")
@@ -124,6 +134,9 @@ def main() -> None:
     else:
         show_message(f"...{owner}?")
 
+    # Track newly unlocked skills to announce
+    pending_skill_notices = []
+
     # Main loop
     while True:
         user_input = get_input()
@@ -132,6 +145,7 @@ def main() -> None:
             print()
             show_face("confused")
             show_message("...you're leaving? Where do you go?")
+            save_identity(identity)
             break
 
         if not user_input:
@@ -140,6 +154,7 @@ def main() -> None:
         if user_input.lower() in ["bye", "exit", "quit", "goodbye"]:
             show_face("worried")
             show_message("You're going? ...will you come back?")
+            save_identity(identity)
             break
 
         # Show thinking dots while processing
@@ -163,6 +178,20 @@ def main() -> None:
         new_memories = extract_memories(user_input, owner)
         for mem in new_memories:
             store_memory(mem["content"], mem.get("type", "fact"), "told")
+            identity = track_memory_stored(identity)
+
+        # Track message stats
+        identity = track_message(identity, user_input, response)
+
+        # Check for skill unlocks
+        identity, newly_unlocked = check_unlocks(identity, topics)
+        for skill_name in newly_unlocked:
+            notice = get_skill_notice(skill_name)
+            if notice:
+                pending_skill_notices.append(notice)
+
+        # Save identity after tracking
+        save_identity(identity)
 
         # Update display only if mood changed
         if mood != current_mood:
@@ -170,7 +199,16 @@ def main() -> None:
             identity = update_mood(identity, mood)
             show_face(mood)
 
+        # Show response
         show_message(response)
+
+        # Show any pending skill notices (quiet self-noticing)
+        if pending_skill_notices:
+            time.sleep(0.5)
+            for notice in pending_skill_notices:
+                show_message(f"...{notice}")
+                time.sleep(1)
+            pending_skill_notices = []
 
 
 if __name__ == "__main__":
