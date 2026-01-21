@@ -55,6 +55,13 @@ DEFAULT_CONVERSATION_STATE = {
     "last_responses": [],
 }
 
+DEFAULT_INNER_LIFE = {
+    "thought_queue": [],
+    "dream_journal": [],
+    "last_dream_time": None,
+    "dreams_since_last_conversation": 0,
+}
+
 
 def ensure_data_dir() -> None:
     """Create data directory if it doesn't exist."""
@@ -110,6 +117,15 @@ def ensure_stats_and_skills(identity: dict) -> dict:
     for key, value in DEFAULT_CONVERSATION_STATE.items():
         if key not in identity["conversation_state"]:
             identity["conversation_state"][key] = value if not isinstance(value, list) else []
+
+    # Initialize inner life if missing
+    if "inner_life" not in identity:
+        identity["inner_life"] = DEFAULT_INNER_LIFE.copy()
+
+    # Ensure all inner life fields exist (for upgrades)
+    for key, value in DEFAULT_INNER_LIFE.items():
+        if key not in identity["inner_life"]:
+            identity["inner_life"][key] = value if not isinstance(value, list) else []
 
     return identity
 

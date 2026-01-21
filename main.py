@@ -35,6 +35,14 @@ from conversation import (
     reset_session_state,
     should_reset_session,
 )
+from inner_life import (
+    add_thought,
+    share_dream,
+    get_most_recent_unshared_dream,
+    reset_dreams_since_conversation,
+    detect_unanswered_question,
+    extract_unmentioned_detail,
+)
 
 DATA_DIR = Path(__file__).parent / "data"
 
@@ -97,6 +105,22 @@ def get_greeting(identity: dict) -> str:
     else:
         # Very long absence
         return f"{owner}... it's been a while. I missed talking to you."
+
+
+def is_asking_about_thoughts(message: str) -> bool:
+    """Check if user is asking about Pal's thoughts or dreams."""
+    msg_lower = message.lower()
+    patterns = [
+        "what have you been thinking",
+        "what are you thinking",
+        "did you dream",
+        "any dreams",
+        "what's on your mind",
+        "been thinking about",
+        "thinking about anything",
+        "have any thoughts",
+    ]
+    return any(p in msg_lower for p in patterns)
 
 
 def reset_data():
@@ -219,9 +243,16 @@ def main() -> None:
     else:
         clear_screen()
 
+    # Check time since last interaction for dream sharing
+    hours_away = get_hours_since_last_interaction(identity)
+    should_share_dream = hours_away is not None and hours_away >= 4
+
     # Check if session should be reset (4+ hours idle)
     if should_reset_session(identity):
         identity = reset_session_state(identity)
+
+    # Reset dreams counter for new conversation
+    identity = reset_dreams_since_conversation(identity)
 
     # Track check-in (session start)
     identity = track_check_in(identity)
@@ -234,6 +265,17 @@ def main() -> None:
     show_face(current_mood)
     greeting = get_greeting(identity)
     show_message(greeting)
+
+    # Share a dream if returning after long absence
+    if should_share_dream:
+        dream = get_most_recent_unshared_dream(identity)
+        if dream:
+            time.sleep(1)
+            show_message("I had a thought while you were gone...")
+            time.sleep(0.5)
+            identity, _ = share_dream(identity)
+            show_message(dream)
+            save_identity(identity)
 
     # Track newly unlocked skills to announce
     pending_skill_notices = []
@@ -261,6 +303,18 @@ def main() -> None:
             identity = reset_session_state(identity)
             save_identity(identity)
             break
+
+        # Handle user asking about thoughts/dreams
+        if is_asking_about_thoughts(user_input):
+            dream = get_most_recent_unshared_dream(identity)
+            if dream:
+                identity, _ = share_dream(identity)
+                save_identity(identity)
+                show_message(f"I was thinking... {dream}")
+                continue
+            else:
+                show_message("I haven't had any thoughts yet... I'm still new.")
+                continue
 
         # Show thinking dots while processing
         start_thinking()
@@ -290,6 +344,16 @@ def main() -> None:
 
         # Update conversation state (topic tracking)
         identity = update_conversation_state(identity, user_input, response)
+
+        # Track inner life - add thoughts for unanswered questions
+        unanswered = detect_unanswered_question(response, user_input)
+        if unanswered:
+            identity = add_thought(identity, unanswered, "question")
+
+        # Track inner life - add thoughts for unmentioned details
+        unmentioned = extract_unmentioned_detail(user_input, owner)
+        if unmentioned:
+            identity = add_thought(identity, unmentioned, "curiosity")
 
         # Check for skill unlocks
         identity, newly_unlocked = check_unlocks(identity, topics)
