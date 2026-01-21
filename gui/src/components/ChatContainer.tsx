@@ -1,10 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect } from "react";
 import Face from "./Face";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
+import { fetchIdentity, sendMessage, type Mood } from "../api";
 import "./ChatContainer.css";
 
-type Mood = "happy" | "curious" | "excited" | "thinking" | "confused" | "sad" | "worried" | "sleepy";
 type WindowMode = "full" | "widget" | "floating";
 
 interface Message {
@@ -19,62 +19,97 @@ interface ChatContainerProps {
 }
 
 function ChatContainer({
-  initialMessage = "Hi! How can I help you today?",
+  initialMessage = "",
   mode = "full",
 }: ChatContainerProps) {
-  const [currentMessage, setCurrentMessage] = useState<Message | null>({
-    id: "initial",
-    text: initialMessage,
-    from: "pal",
-  });
+  const [currentMessage, setCurrentMessage] = useState<Message | null>(
+    initialMessage ? { id: "initial", text: initialMessage, from: "pal" } : null
+  );
   const [mood, setMood] = useState<Mood>("curious");
   const [isThinking, setIsThinking] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [backendConnected, setBackendConnected] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
-  const handleSend = useCallback((text: string) => {
+  // Fetch identity on mount to get current mood
+  useEffect(() => {
+    const loadIdentity = async () => {
+      try {
+        const identity = await fetchIdentity();
+        setMood(identity.mood);
+        setBackendConnected(true);
+        setError(null);
+
+        // Set greeting message if no initial message provided
+        if (!initialMessage && mode === "full") {
+          const greeting = identity.owner_name
+            ? `Hi ${identity.owner_name}!`
+            : "Hi! I'm Pal.";
+          setCurrentMessage({
+            id: "greeting",
+            text: greeting,
+            from: "pal",
+          });
+        }
+      } catch {
+        setBackendConnected(false);
+        setError("Backend not connected. Start the server with: python server.py");
+        // Set fallback message
+        if (!initialMessage && mode === "full") {
+          setCurrentMessage({
+            id: "error",
+            text: "Waiting for backend...",
+            from: "pal",
+          });
+        }
+      }
+    };
+
+    loadIdentity();
+  }, [initialMessage, mode]);
+
+  const handleSend = useCallback(async (text: string) => {
+    if (!backendConnected) {
+      setError("Backend not connected");
+      return;
+    }
+
     // Start thinking
     setIsThinking(true);
     setMood("thinking");
     setCurrentMessage(null);
+    setError(null);
 
-    // Simulate response (placeholder - no backend yet)
-    setTimeout(() => {
+    try {
+      const result = await sendMessage(text);
+
       setIsThinking(false);
-
-      // Determine mood based on message content (simple placeholder logic)
-      let responseMood: Mood = "happy";
-      let response = "";
-
-      const lowerText = text.toLowerCase();
-      if (lowerText.includes("help") || lowerText.includes("?")) {
-        responseMood = "curious";
-        response = "I'd be happy to help! What would you like to know?";
-      } else if (lowerText.includes("thank")) {
-        responseMood = "happy";
-        response = "You're welcome!";
-      } else if (lowerText.includes("hello") || lowerText.includes("hi")) {
-        responseMood = "excited";
-        response = "Hey there! Great to see you!";
-      } else if (lowerText.includes("bye") || lowerText.includes("goodbye")) {
-        responseMood = "sleepy";
-        response = "See you later! Take care!";
-      } else {
-        responseMood = "happy";
-        response = `I heard you say: "${text}"`;
-      }
-
-      setMood(responseMood);
+      setMood(result.mood);
       setIsSpeaking(true);
       setCurrentMessage({
         id: Date.now().toString(),
-        text: response,
+        text: result.response,
         from: "pal",
       });
 
       // Reset speaking state after animation
       setTimeout(() => setIsSpeaking(false), 250);
-    }, 1200);
-  }, []);
+
+      // Log skill unlock if any
+      if (result.skill_unlocked) {
+        console.log(`Skill unlocked: ${result.skill_unlocked}`);
+      }
+    } catch (err) {
+      setIsThinking(false);
+      setMood("confused");
+      setError("Failed to get response");
+      setCurrentMessage({
+        id: Date.now().toString(),
+        text: "...I couldn't hear that. Something went wrong.",
+        from: "pal",
+      });
+    }
+  }, [backendConnected]);
 
   // Floating mode: just the face
   if (mode === "floating") {
@@ -118,10 +153,16 @@ function ChatContainer({
             isThinking={isThinking}
           />
         </div>
+
+        {error && (
+          <div className="chat-container__error">
+            {error}
+          </div>
+        )}
       </div>
 
       <div className="chat-container__input">
-        <ChatInput onSend={handleSend} disabled={isThinking} />
+        <ChatInput onSend={handleSend} disabled={isThinking || !backendConnected} />
       </div>
     </div>
   );

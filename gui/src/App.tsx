@@ -155,7 +155,7 @@ function App() {
 
         {/* Main content */}
         <main className="app-content">
-          <ChatContainer initialMessage="Hi! How can I help you today?" mode="full" />
+          <ChatContainer mode="full" />
         </main>
       </>
     );

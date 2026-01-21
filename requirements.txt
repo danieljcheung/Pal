@@ -4,3 +4,5 @@ lancedb
 sentence-transformers
 pyarrow
 rich
+fastapi
+uvicorn

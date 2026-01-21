@@ -38,6 +38,13 @@
   padding-top: 12px;
 }
 
+.chat-container__error {
+  font-size: 0.75rem;
+  color: rgba(255, 100, 100, 0.8);
+  text-align: center;
+  padding: 8px;
+}
+
 /* ============================================
    Widget Mode
    ============================================ */

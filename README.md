@@ -112,15 +112,28 @@ Pal has a desktop GUI built with Tauri (Rust + React):
 - Right-click for menu: Show, Full/Widget/Floating mode, Quit
 
 ### Running the GUI
+
+The GUI connects to the Python backend via FastAPI.
+
+**Terminal 1 - Start the backend:**
+```bash
+pip install -r requirements.txt  # if not already installed
+python server.py
+```
+
+**Terminal 2 - Start the GUI:**
 ```bash
 cd gui
 npm install
 npm run tauri dev
 ```
 
+The backend runs on `http://127.0.0.1:8000`. The GUI will show "Waiting for backend..." if the server isn't running.
+
 ## Tech Stack
 
 - **Python** - Core backend
+- **FastAPI** - REST API server for GUI communication
 - **Tauri** - Desktop GUI framework (Rust + WebView)
 - **React + TypeScript** - GUI frontend
 - **Anthropic Claude API** - Pal's brain (claude-sonnet)
@@ -131,7 +144,8 @@ npm run tauri dev
 
 ```
 pal/
-├── main.py           # Entry point, conversation loop
+├── main.py           # CLI entry point, conversation loop
+├── server.py         # FastAPI server for GUI
 ├── brain.py          # Claude API integration + system prompt
 ├── memory.py         # LanceDB + embeddings memory system
 ├── personality.py    # Identity state management
@@ -145,6 +159,9 @@ pal/
 ├── dashboard.py      # Brain visualization tool
 ├── requirements.txt  # Dependencies
 ├── .env              # API key (create from .env.example)
+├── gui/              # Tauri desktop app
+│   ├── src/          # React frontend
+│   └── src-tauri/    # Rust backend
 └── data/             # Auto-created
     ├── identity.json # Personality + stats + skills + inner life
     ├── topics.json   # Topic cards
@@ -247,7 +264,7 @@ Early development. Currently:
 - [x] Desktop GUI (Tauri)
 - [x] System tray integration
 - [x] Window modes (full/widget/floating)
-- [ ] Backend integration (GUI ↔ Python)
+- [x] Backend integration (GUI ↔ Python)
 - [ ] Voice
 - [ ] Cross-device sync
 - [ ] Hardware body (Raspberry Pi)

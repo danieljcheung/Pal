@@ -33,23 +33,43 @@
   }
 }
 
-/* Thinking animation - subtle side-to-side */
+/* Thinking animation - gentle sway with pulsing glow */
 .face--thinking {
-  animation: breathing 3s ease-in-out infinite, thinking 1.5s ease-in-out infinite;
+  animation:
+    thinking-sway 2.5s ease-in-out infinite,
+    thinking-glow 2s ease-in-out infinite;
 }
 
-@keyframes thinking {
+/* Gentle side-to-side sway with slight tilt */
+@keyframes thinking-sway {
   0%, 100% {
-    transform: scale(1) translateX(0);
+    transform: scale(1) translateX(0) rotate(0deg);
   }
   25% {
-    transform: scale(1.01) translateX(-2px);
+    transform: scale(1.01) translateX(-3px) rotate(-1deg);
   }
   50% {
-    transform: scale(1.02) translateX(0);
+    transform: scale(1.02) translateX(0) rotate(0deg);
   }
   75% {
-    transform: scale(1.01) translateX(2px);
+    transform: scale(1.01) translateX(3px) rotate(1deg);
+  }
+}
+
+/* Soft pulsing glow effect */
+@keyframes thinking-glow {
+  0%, 100% {
+    text-shadow:
+      0 0 10px rgba(255, 255, 255, 0.1),
+      0 0 20px rgba(255, 255, 255, 0.05);
+    filter: brightness(1);
+  }
+  50% {
+    text-shadow:
+      0 0 15px rgba(255, 255, 255, 0.2),
+      0 0 30px rgba(255, 255, 255, 0.1),
+      0 0 45px rgba(200, 200, 255, 0.05);
+    filter: brightness(1.05);
   }
 }
 
