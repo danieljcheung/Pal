@@ -16,10 +16,17 @@
 }
 
 .unicode-face__text {
-  /* Large, clean font */
-  font-family: "Segoe UI", "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
-  font-size: clamp(2.5rem, 8vw, 6rem);
-  font-weight: 300;
+  /* Fixed-width container for consistent sizing */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 8em;
+  min-width: 8em;
+
+  /* Monospace font for consistent character width */
+  font-family: "SF Mono", "Cascadia Code", "Consolas", "Monaco", "Courier New", monospace;
+  font-size: clamp(2rem, 7vw, 5rem);
+  font-weight: 400;
   line-height: 1;
 
   /* Soft white with glow */
@@ -28,18 +35,19 @@
     0 0 20px rgba(255, 255, 255, 0.3),
     0 0 40px rgba(255, 255, 255, 0.1);
 
-  /* Letter spacing for breathing room */
-  letter-spacing: 0.15em;
+  /* Consistent letter spacing */
+  letter-spacing: 0.1em;
 
   /* Keep on one line - CRITICAL */
   white-space: nowrap;
   overflow: visible;
+  text-align: center;
 
   /* Prevent selection */
   user-select: none;
 
   /* Smooth transitions for mood changes */
-  transition: opacity 0.3s ease, font-size 0.2s ease;
+  transition: opacity 0.3s ease;
 }
 
 /* Breathing animation */
@@ -114,12 +122,12 @@
 
 /* Floating mode - smaller */
 .chat-container__face--floating .unicode-face__text {
-  font-size: clamp(1.5rem, 6vw, 2.5rem);
-  letter-spacing: 0.1em;
+  font-size: clamp(1.2rem, 5vw, 2rem);
+  width: 8em;
 }
 
 /* Widget mode */
 .chat-container__face--widget .unicode-face__text {
-  font-size: clamp(2rem, 7vw, 3rem);
-  letter-spacing: 0.12em;
+  font-size: clamp(1.5rem, 6vw, 2.5rem);
+  width: 8em;
 }
