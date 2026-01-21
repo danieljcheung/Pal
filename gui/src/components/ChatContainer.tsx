@@ -1,8 +1,8 @@
-import { useState, useCallback, useEffect } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import Face from "./Face";
 import ChatMessage from "./ChatMessage";
 import ChatInput from "./ChatInput";
-import { fetchIdentity, sendMessage, type Mood } from "../api";
+import { fetchIdentity, sendMessageStream, type Mood } from "../api";
 import "./ChatContainer.css";
 
 type WindowMode = "full" | "widget" | "floating";
@@ -27,9 +27,11 @@ function ChatContainer({
   );
   const [mood, setMood] = useState<Mood>("curious");
   const [isThinking, setIsThinking] = useState(false);
+  const [isStreaming, setIsStreaming] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
   const [backendConnected, setBackendConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const streamingTextRef = useRef("");
 
   // Fetch identity on mount to get current mood
   useEffect(() => {
@@ -74,37 +76,57 @@ function ChatContainer({
       return;
     }
 
-    // Start thinking
+    // Start thinking immediately
     setIsThinking(true);
+    setIsStreaming(false);
     setMood("thinking");
     setCurrentMessage(null);
     setError(null);
+    streamingTextRef.current = "";
+
+    const messageId = Date.now().toString();
 
     try {
-      const result = await sendMessage(text);
+      await sendMessageStream(
+        text,
+        // onChunk - called for each text chunk
+        (chunk) => {
+          // First chunk: switch from thinking to streaming
+          if (!streamingTextRef.current) {
+            setIsThinking(false);
+            setIsStreaming(true);
+            setIsSpeaking(true);
+          }
 
-      setIsThinking(false);
-      setMood(result.mood);
-      setIsSpeaking(true);
-      setCurrentMessage({
-        id: Date.now().toString(),
-        text: result.response,
-        from: "pal",
-      });
+          streamingTextRef.current += chunk;
+          setCurrentMessage({
+            id: messageId,
+            text: streamingTextRef.current,
+            from: "pal",
+          });
+        },
+        // onDone - called when streaming completes
+        (finalMood, skillUnlocked) => {
+          setIsStreaming(false);
+          setMood(finalMood);
 
-      // Reset speaking state after animation
-      setTimeout(() => setIsSpeaking(false), 250);
+          // Brief bounce effect at completion
+          setIsSpeaking(true);
+          setTimeout(() => setIsSpeaking(false), 250);
 
-      // Log skill unlock if any
-      if (result.skill_unlocked) {
-        console.log(`Skill unlocked: ${result.skill_unlocked}`);
-      }
+          // Log skill unlock if any
+          if (skillUnlocked) {
+            console.log(`Skill unlocked: ${skillUnlocked}`);
+          }
+        }
+      );
     } catch (err) {
       setIsThinking(false);
+      setIsStreaming(false);
       setMood("confused");
       setError("Failed to get response");
       setCurrentMessage({
-        id: Date.now().toString(),
+        id: messageId,
         text: "...I couldn't hear that. Something went wrong.",
         from: "pal",
       });
@@ -151,6 +173,7 @@ function ChatContainer({
           <ChatMessage
             text={currentMessage?.text || ""}
             isThinking={isThinking}
+            isStreaming={isStreaming}
           />
         </div>
 
@@ -162,7 +185,7 @@ function ChatContainer({
       </div>
 
       <div className="chat-container__input">
-        <ChatInput onSend={handleSend} disabled={isThinking || !backendConnected} />
+        <ChatInput onSend={handleSend} disabled={isThinking || isStreaming || !backendConnected} />
       </div>
     </div>
   );

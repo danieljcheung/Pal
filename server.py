@@ -1,12 +1,15 @@
 """FastAPI server to bridge Tauri GUI with Pal's Python backend."""
 
+import re
+import json
 from fastapi import FastAPI, HTTPException
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import StreamingResponse
 from pydantic import BaseModel
 from contextlib import asynccontextmanager
 
 from personality import load_identity, save_identity, update_mood, get_age
-from brain import think, extract_memories
+from brain import think, think_stream, extract_memories
 from memory import search_memories, store_memory, format_memories_for_prompt, memory_count, get_all_memories
 from conversation import update_conversation_state, reset_session_state, should_reset_session
 from stats import track_message, track_memory_stored, track_check_in
@@ -156,6 +159,108 @@ async def chat(request: ChatRequest):
         response=response,
         mood=mood,
         skill_unlocked=skill_unlocked,
+    )
+
+
+def _clean_mood_tag(text: str) -> str:
+    """Remove mood tag from text."""
+    return re.sub(r"\s*\[mood:\w+\]\s*", "", text).strip()
+
+
+@app.post("/chat/stream")
+async def chat_stream(request: ChatRequest):
+    """Send a message to Pal and get a streaming response via SSE."""
+    identity = get_identity()
+    user_message = request.message.strip()
+
+    if not user_message:
+        raise HTTPException(status_code=400, detail="Message cannot be empty")
+
+    # Search relevant memories
+    memories = search_memories(user_message, limit=5)
+    memories_str = format_memories_for_prompt(memories)
+
+    def generate():
+        nonlocal identity
+        full_response = ""
+        buffer = ""  # Buffer to handle mood tags split across chunks
+
+        # Stream chunks from Claude
+        for chunk in think_stream(user_message, memories_str, identity):
+            if isinstance(chunk, dict):
+                # Final message with mood
+                mood = chunk.get("mood", "confused")
+
+                # Send any remaining buffered text (cleaned of mood tag)
+                if buffer:
+                    clean_buffer = _clean_mood_tag(buffer)
+                    if clean_buffer:
+                        yield f"data: {json.dumps({'type': 'chunk', 'text': clean_buffer})}\n\n"
+
+                # Clean response of mood tag
+                clean_response = _clean_mood_tag(full_response)
+
+                # Update identity with mood and conversation state
+                identity = update_mood(identity, mood)
+                identity = update_conversation_state(identity, user_message, clean_response)
+                identity = track_message(identity, user_message, clean_response)
+
+                # Extract and store memories
+                owner_name = identity.get("owner_name", "Friend")
+                new_memories = extract_memories(user_message, owner_name)
+                for mem in new_memories:
+                    store_memory(mem["content"], mem.get("type", "fact"), "told")
+                    identity = track_memory_stored(identity)
+
+                # Check for skill unlocks
+                topics = load_topics()
+                identity, newly_unlocked = check_unlocks(identity, topics)
+                save_and_update_identity(identity)
+
+                skill_unlocked = newly_unlocked[0] if newly_unlocked else None
+
+                # Send final event with metadata
+                yield f"data: {json.dumps({'type': 'done', 'mood': mood, 'skill_unlocked': skill_unlocked})}\n\n"
+            else:
+                # Text chunk - accumulate full response
+                full_response += chunk
+                buffer += chunk
+
+                # The mood tag [mood:xxx] is always at the end of the response
+                # Hold back any text that might be the start of the mood tag
+                # Look for '[' and hold back everything from there
+                bracket_pos = buffer.rfind('[')
+
+                if bracket_pos == -1:
+                    # No bracket, safe to send everything
+                    send_text = buffer
+                    buffer = ""
+                else:
+                    # Found bracket - check if it could be mood tag
+                    potential_tag = buffer[bracket_pos:]
+                    if potential_tag.startswith("[mood:") and "]" in potential_tag:
+                        # Complete mood tag found - send text before it, discard tag
+                        send_text = buffer[:bracket_pos].rstrip()
+                        buffer = ""
+                    elif "[mood:"[:len(potential_tag)] == potential_tag or potential_tag.startswith("[mood:"):
+                        # Partial mood tag - hold it back
+                        send_text = buffer[:bracket_pos]
+                        buffer = potential_tag
+                    else:
+                        # Not a mood tag bracket, safe to send
+                        send_text = buffer
+                        buffer = ""
+
+                if send_text:
+                    yield f"data: {json.dumps({'type': 'chunk', 'text': send_text})}\n\n"
+
+    return StreamingResponse(
+        generate(),
+        media_type="text/event-stream",
+        headers={
+            "Cache-Control": "no-cache",
+            "Connection": "keep-alive",
+        }
     )
 
 

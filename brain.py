@@ -192,6 +192,22 @@ Pal: "Pizza... what is that?
 Keep it SHORT. One or two sentences MAX."""
 
 
+def _build_system_prompt(memories_str: str, identity: dict) -> str:
+    """Build the system prompt with all context."""
+    owner = identity.get("owner_name", "my creator")
+    skills_str = get_skills_for_prompt(identity)
+    conversation_str = format_conversation_state_for_prompt(identity)
+    inner_life_str = format_inner_life_for_prompt(identity)
+
+    return SYSTEM_PROMPT.format(
+        memories=memories_str if memories_str else "Nothing yet. I just started.",
+        skills=skills_str if skills_str else "You have no special skills yet.",
+        conversation_state=conversation_str,
+        inner_life=inner_life_str,
+        owner_name=owner,
+    )
+
+
 def think(user_input: str, memories_str: str, identity: dict) -> tuple[str, str]:
     """
     Generate a response using Claude API.
@@ -204,18 +220,7 @@ def think(user_input: str, memories_str: str, identity: dict) -> tuple[str, str]
     Returns:
         Tuple of (response_text, mood)
     """
-    owner = identity.get("owner_name", "my creator")
-    skills_str = get_skills_for_prompt(identity)
-    conversation_str = format_conversation_state_for_prompt(identity)
-    inner_life_str = format_inner_life_for_prompt(identity)
-
-    system = SYSTEM_PROMPT.format(
-        memories=memories_str if memories_str else "Nothing yet. I just started.",
-        skills=skills_str if skills_str else "You have no special skills yet.",
-        conversation_state=conversation_str,
-        inner_life=inner_life_str,
-        owner_name=owner,
-    )
+    system = _build_system_prompt(memories_str, identity)
 
     response = client.messages.create(
         model=MODEL,
@@ -236,6 +241,44 @@ def think(user_input: str, memories_str: str, identity: dict) -> tuple[str, str]
         full_response = re.sub(r"\s*\[mood:\w+\]\s*", "", full_response).strip()
 
     return full_response, mood
+
+
+def think_stream(user_input: str, memories_str: str, identity: dict):
+    """
+    Generate a streaming response using Claude API.
+
+    Args:
+        user_input: What the user said
+        memories_str: Formatted string of relevant memories
+        identity: Pal's identity state
+
+    Yields:
+        Text chunks as they are generated.
+        Final yield is a dict with 'mood' key.
+    """
+    system = _build_system_prompt(memories_str, identity)
+
+    with client.messages.stream(
+        model=MODEL,
+        max_tokens=100,
+        system=system,
+        messages=[
+            {"role": "user", "content": user_input}
+        ],
+    ) as stream:
+        full_text = ""
+        for text in stream.text_stream:
+            full_text += text
+            yield text
+
+    # Extract mood from complete response
+    mood = "confused"  # default
+    mood_match = re.search(r"\[mood:(\w+)\]", full_text)
+    if mood_match:
+        mood = mood_match.group(1)
+
+    # Yield final mood as special message
+    yield {"type": "done", "mood": mood}
 
 
 def extract_memories(user_message: str, owner_name: str) -> list[dict]:

@@ -115,6 +115,76 @@ export async function sendMessage(message: string): Promise<ChatResponse> {
   return response.json();
 }
 
+export interface StreamChunk {
+  type: "chunk";
+  text: string;
+}
+
+export interface StreamDone {
+  type: "done";
+  mood: Mood;
+  skill_unlocked: string | null;
+}
+
+export type StreamEvent = StreamChunk | StreamDone;
+
+/**
+ * Send a message to Pal and get a streaming response.
+ * Calls onChunk for each text chunk, and onDone when complete.
+ */
+export async function sendMessageStream(
+  message: string,
+  onChunk: (text: string) => void,
+  onDone: (mood: Mood, skillUnlocked: string | null) => void
+): Promise<void> {
+  const response = await fetch(`${API_BASE}/chat/stream`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ message }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to send message: ${response.statusText}`);
+  }
+
+  const reader = response.body?.getReader();
+  if (!reader) {
+    throw new Error("No response body");
+  }
+
+  const decoder = new TextDecoder();
+  let buffer = "";
+
+  while (true) {
+    const { done, value } = await reader.read();
+    if (done) break;
+
+    buffer += decoder.decode(value, { stream: true });
+
+    // Process complete SSE messages
+    const lines = buffer.split("\n");
+    buffer = lines.pop() || ""; // Keep incomplete line in buffer
+
+    for (const line of lines) {
+      if (line.startsWith("data: ")) {
+        const data = line.slice(6);
+        try {
+          const event: StreamEvent = JSON.parse(data);
+          if (event.type === "chunk") {
+            onChunk(event.text);
+          } else if (event.type === "done") {
+            onDone(event.mood, event.skill_unlocked);
+          }
+        } catch {
+          // Ignore parse errors
+        }
+      }
+    }
+  }
+}
+
 /**
  * Fetch Pal's brain data for visualization.
  */

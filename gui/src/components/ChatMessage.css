@@ -59,3 +59,24 @@
     transform: translateY(-4px);
   }
 }
+
+/* Streaming state */
+.chat-message--streaming {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.streaming-cursor {
+  display: inline-block;
+  margin-left: 2px;
+  animation: cursor-blink 0.8s ease-in-out infinite;
+}
+
+@keyframes cursor-blink {
+  0%, 50% {
+    opacity: 1;
+  }
+  51%, 100% {
+    opacity: 0;
+  }
+}
