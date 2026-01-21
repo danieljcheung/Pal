@@ -31,6 +31,11 @@ Pal has a mind that keeps working even when you're not there:
 - Connections between memories
 - Shared when you return after long absence
 
+**Background Idle Generation**
+- After 10 min idle: Pal may surface a pending thought
+- After 30 min idle: Pal generates a dream (if cooldown allows)
+- Dreams shared when you return after 4+ hour absence
+
 ```
 Pal: dan! I was waiting for you.
 Pal: I had a thought while you were gone...
@@ -113,6 +118,7 @@ pal/
 ├── topics.py         # Topic card management
 ├── conversation.py   # Topic tracking + conversation state
 ├── inner_life.py     # Thought queue + dream journal
+├── idle_monitor.py   # Background dream/thought generation
 ├── dashboard.py      # Brain visualization tool
 ├── requirements.txt  # Dependencies
 ├── .env              # API key (create from .env.example)
@@ -214,7 +220,7 @@ Early development. Currently:
 - [x] Time-based greetings
 - [x] Command line flags
 - [x] Brain visualization dashboard
-- [ ] Background dream generation (idle)
+- [x] Background dream generation (idle)
 - [ ] Voice
 - [ ] Cross-device sync
 - [ ] Hardware body (Raspberry Pi)
