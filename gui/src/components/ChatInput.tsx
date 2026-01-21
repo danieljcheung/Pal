@@ -61,7 +61,7 @@ function ChatInput({ onSend, disabled = false }: ChatInputProps) {
           disabled={disabled}
         />
       ) : (
-        <span className="chat-input__placeholder">Click to talk...</span>
+        <span className="chat-input__placeholder">···</span>
       )}
     </div>
   );

@@ -1,12 +1,13 @@
-/* Pal GUI - Dark Theme */
+/* Pal GUI - LCD Aesthetic Theme */
 
 :root {
-  --bg-primary: rgba(18, 18, 20, 0.95);
-  --bg-secondary: rgba(30, 30, 35, 0.9);
-  --text-primary: #e8e8e8;
-  --text-secondary: rgba(255, 255, 255, 0.5);
-  --accent: #555;
-  --border: rgba(255, 255, 255, 0.1);
+  --bg-primary: rgba(12, 14, 16, 0.98);
+  --bg-secondary: rgba(20, 24, 28, 0.95);
+  --text-primary: #d8dce0;
+  --text-secondary: rgba(200, 210, 220, 0.5);
+  --accent: #4a5568;
+  --border: rgba(255, 255, 255, 0.08);
+  --lcd-glow: rgba(180, 200, 220, 0.03);
 }
 
 * {
@@ -28,6 +29,24 @@ body {
   background: var(--bg-primary);
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+}
+
+/* Subtle LCD screen vignette effect */
+body::after {
+  content: "";
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  background: radial-gradient(
+    ellipse at center,
+    transparent 0%,
+    transparent 60%,
+    rgba(0, 0, 0, 0.15) 100%
+  );
+  z-index: 9999;
 }
 
 /* Main app container */
@@ -180,4 +199,28 @@ body {
 .app-floating:hover {
   transform: scale(1.05);
   transition: transform 0.2s ease;
+}
+
+/* ============================================
+   Responsive - Hide controls on small windows
+   ============================================ */
+
+@media (max-height: 350px) {
+  .app-header {
+    padding: 8px 12px;
+  }
+
+  .hamburger-btn {
+    display: none;
+  }
+}
+
+@media (max-width: 320px) {
+  .app-header {
+    padding: 8px 12px;
+  }
+
+  .hamburger-btn {
+    display: none;
+  }
 }

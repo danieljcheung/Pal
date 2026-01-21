@@ -1,46 +1,66 @@
-/* ChatInput Styles */
+/* ChatInput Styles - Ghost Input */
 
 .chat-input {
-  /* Glass effect */
-  background: rgba(255, 255, 255, 0.05);
-  backdrop-filter: blur(10px);
-  -webkit-backdrop-filter: blur(10px);
-  border: 1px solid rgba(255, 255, 255, 0.1);
+  /* Nearly invisible by default */
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.03);
   border-radius: 20px;
 
-  /* Layout */
+  /* Layout - responsive width */
   padding: 10px 20px;
-  min-width: 140px;
-  max-width: 400px;
+  min-width: 100px;
+  width: clamp(100px, 80%, 400px);
 
-  /* Transitions */
-  transition: all 0.3s ease;
+  /* Very faint presence */
+  opacity: 0.05;
+
+  /* Smooth transitions */
+  transition:
+    opacity 0.3s ease,
+    background 0.3s ease,
+    border-color 0.3s ease,
+    width 0.3s ease,
+    box-shadow 0.3s ease;
   cursor: pointer;
 }
 
+/* Hover state - subtle reveal */
 .chat-input:hover:not(.chat-input--expanded):not(.chat-input--disabled) {
-  background: rgba(255, 255, 255, 0.08);
-  border-color: rgba(255, 255, 255, 0.15);
+  opacity: 0.4;
+  background: rgba(255, 255, 255, 0.03);
+  border-color: rgba(255, 255, 255, 0.08);
 }
 
+/* Expanded/focused state - fully visible */
 .chat-input--expanded {
-  min-width: 300px;
+  opacity: 1;
+  width: clamp(200px, 90%, 400px);
   cursor: text;
-  background: rgba(255, 255, 255, 0.08);
+
+  /* Dark glass effect */
+  background: rgba(0, 0, 0, 0.4);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border-color: rgba(255, 255, 255, 0.1);
 }
 
+/* Disabled state */
 .chat-input--disabled {
-  opacity: 0.5;
+  opacity: 0.02;
   cursor: not-allowed;
+  pointer-events: none;
 }
 
+/* Placeholder text - collapsed state */
 .chat-input__placeholder {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 0.9rem;
-  color: rgba(255, 255, 255, 0.4);
+  font-size: 1rem;
+  color: rgba(255, 255, 255, 0.5);
   user-select: none;
+  letter-spacing: 2px;
 }
 
+/* Input field - expanded state */
 .chat-input input {
   width: 100%;
   background: transparent;
@@ -52,11 +72,11 @@
 }
 
 .chat-input input::placeholder {
-  color: rgba(255, 255, 255, 0.4);
+  color: rgba(255, 255, 255, 0.35);
 }
 
 /* Focus ring for accessibility */
-.chat-input:focus-within {
-  border-color: rgba(255, 255, 255, 0.25);
-  box-shadow: 0 0 0 2px rgba(255, 255, 255, 0.05);
+.chat-input--expanded:focus-within {
+  border-color: rgba(255, 255, 255, 0.15);
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
 }

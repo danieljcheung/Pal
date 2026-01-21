@@ -1,0 +1,125 @@
+/* Unicode Face - Clean Text Style */
+
+.unicode-face {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+
+  /* Idle breathing animation */
+  animation: face-breathing 3s ease-in-out infinite;
+
+  /* GPU acceleration */
+  will-change: transform;
+  transform: translateZ(0);
+}
+
+.unicode-face__text {
+  /* Large, clean font */
+  font-family: "Segoe UI", "SF Pro Display", -apple-system, BlinkMacSystemFont, sans-serif;
+  font-size: clamp(2.5rem, 8vw, 6rem);
+  font-weight: 300;
+  line-height: 1;
+
+  /* Soft white with glow */
+  color: rgba(255, 255, 255, 0.9);
+  text-shadow:
+    0 0 20px rgba(255, 255, 255, 0.3),
+    0 0 40px rgba(255, 255, 255, 0.1);
+
+  /* Letter spacing for breathing room */
+  letter-spacing: 0.15em;
+
+  /* Keep on one line - CRITICAL */
+  white-space: nowrap;
+  overflow: visible;
+
+  /* Prevent selection */
+  user-select: none;
+
+  /* Smooth transitions for mood changes */
+  transition: opacity 0.3s ease, font-size 0.2s ease;
+}
+
+/* Breathing animation */
+@keyframes face-breathing {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.03);
+  }
+}
+
+/* Thinking animation - gentle sway with pulsing glow */
+.unicode-face--thinking {
+  animation:
+    face-thinking-sway 2.5s ease-in-out infinite,
+    face-thinking-glow 2s ease-in-out infinite;
+}
+
+@keyframes face-thinking-sway {
+  0%, 100% {
+    transform: scale(1) translateX(0);
+  }
+  25% {
+    transform: scale(1.01) translateX(-3px);
+  }
+  50% {
+    transform: scale(1.02) translateX(0);
+  }
+  75% {
+    transform: scale(1.01) translateX(3px);
+  }
+}
+
+@keyframes face-thinking-glow {
+  0%, 100% {
+    filter: drop-shadow(0 0 10px rgba(255, 255, 255, 0.1));
+  }
+  50% {
+    filter: drop-shadow(0 0 20px rgba(255, 255, 255, 0.3));
+  }
+}
+
+/* Bounce animation when speaking */
+.unicode-face--bounce {
+  animation: face-bounce 0.2s ease-out;
+}
+
+@keyframes face-bounce {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+/* Hover effect */
+.unicode-face:hover {
+  animation-play-state: paused;
+}
+
+.unicode-face:hover .unicode-face__text {
+  text-shadow:
+    0 0 25px rgba(255, 255, 255, 0.4),
+    0 0 50px rgba(255, 255, 255, 0.2);
+  transition: text-shadow 0.2s ease;
+}
+
+/* Floating mode - smaller */
+.chat-container__face--floating .unicode-face__text {
+  font-size: clamp(1.5rem, 6vw, 2.5rem);
+  letter-spacing: 0.1em;
+}
+
+/* Widget mode */
+.chat-container__face--widget .unicode-face__text {
+  font-size: clamp(2rem, 7vw, 3rem);
+  letter-spacing: 0.12em;
+}

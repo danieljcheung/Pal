@@ -2,13 +2,21 @@
 
 .chat-message {
   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-  font-size: 1rem;
+  font-size: clamp(0.85rem, 3vw, 1rem);
   font-weight: 400;
   color: rgba(255, 255, 255, 0.7);
   text-align: center;
-  max-width: 80%;
+  width: 100%;
+  max-width: 90%;
   line-height: 1.5;
   padding: 0 1rem;
+
+  /* Limit to 2 lines, then truncate */
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
 
   /* Fade in animation */
   opacity: 0;
@@ -25,6 +33,10 @@
 .chat-message--thinking {
   opacity: 1;
   transform: none;
+  /* Override line clamp for thinking dots */
+  display: block;
+  -webkit-line-clamp: unset;
+  overflow: visible;
 }
 
 .thinking-dots {
@@ -64,6 +76,8 @@
 .chat-message--streaming {
   opacity: 1;
   transform: translateY(0);
+  /* Allow more lines while streaming */
+  -webkit-line-clamp: 4;
 }
 
 .streaming-cursor {
