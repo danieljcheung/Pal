@@ -1,8 +1,12 @@
 """Main entry point for Pal - Personal Artificial Lifeform."""
 
+import argparse
+import shutil
 import time
 import os
 import sys
+from datetime import datetime
+from pathlib import Path
 
 # Enable UTF-8 output on Windows
 if sys.platform == "win32":
@@ -32,6 +36,8 @@ from conversation import (
     should_reset_session,
 )
 
+DATA_DIR = Path(__file__).parent / "data"
+
 
 def clear_screen():
     """Clear terminal screen."""
@@ -54,6 +60,62 @@ def get_input() -> str:
         return input("  You: ").strip()
     except (EOFError, KeyboardInterrupt):
         return None
+
+
+def get_hours_since_last_interaction(identity: dict) -> float | None:
+    """Get hours since last interaction, or None if never interacted."""
+    stats = identity.get("stats", {})
+    last_interaction = stats.get("last_interaction")
+
+    if not last_interaction:
+        return None
+
+    try:
+        last_time = datetime.fromisoformat(last_interaction)
+        return (datetime.now() - last_time).total_seconds() / 3600
+    except Exception:
+        return None
+
+
+def get_greeting(identity: dict) -> str:
+    """Get appropriate greeting based on time since last interaction."""
+    owner = identity.get("owner_name", "someone")
+    hours = get_hours_since_last_interaction(identity)
+
+    if hours is None:
+        return f"...{owner}?"
+
+    if hours < 1:
+        # Short absence
+        return f"Hi {owner}."
+    elif hours < 4:
+        # Medium absence
+        return f"{owner}? You're back."
+    elif hours < 24:
+        # Long absence
+        return f"{owner}! I was waiting for you."
+    else:
+        # Very long absence
+        return f"{owner}... it's been a while. I missed talking to you."
+
+
+def reset_data():
+    """Clear all Pal data for a fresh start."""
+    if DATA_DIR.exists():
+        shutil.rmtree(DATA_DIR)
+        print("  Data cleared. Pal will start fresh.")
+    else:
+        print("  No data to clear.")
+
+
+def skip_birth_setup(identity: dict, owner_name: str = "Friend") -> dict:
+    """Skip birth sequence and set up identity for testing."""
+    identity["first_boot"] = False
+    identity["born"] = datetime.now().isoformat()
+    identity["owner_name"] = owner_name
+    identity["mood"] = "curious"
+    save_identity(identity)
+    return identity
 
 
 def birth_sequence(identity: dict) -> dict:
@@ -113,12 +175,45 @@ def birth_sequence(identity: dict) -> dict:
     return identity
 
 
+def parse_args():
+    """Parse command line arguments."""
+    parser = argparse.ArgumentParser(description="Pal - Personal Artificial Lifeform")
+    parser.add_argument(
+        "--reset",
+        action="store_true",
+        help="Clear all data and start fresh with birth sequence"
+    )
+    parser.add_argument(
+        "--skip-birth",
+        action="store_true",
+        help="Skip birth sequence for testing (sets default owner name)"
+    )
+    parser.add_argument(
+        "--name",
+        type=str,
+        default="Friend",
+        help="Owner name to use with --skip-birth (default: Friend)"
+    )
+    return parser.parse_args()
+
+
 def main() -> None:
     """Main conversation loop."""
+    args = parse_args()
+
+    # Handle --reset flag
+    if args.reset:
+        reset_data()
+
     identity = load_identity()
     topics = load_topics()
 
-    # Birth sequence for first boot
+    # Handle --skip-birth flag
+    if args.skip_birth and identity["first_boot"]:
+        identity = skip_birth_setup(identity, args.name)
+        print(f"  Birth skipped. Owner set to: {args.name}")
+
+    # Birth sequence only for first boot
     if identity["first_boot"]:
         identity = birth_sequence(identity)
     else:
@@ -135,13 +230,10 @@ def main() -> None:
     owner = identity.get("owner_name", "someone")
     current_mood = identity.get("mood", "confused")
 
-    # Show return greeting
+    # Show greeting based on time since last interaction
     show_face(current_mood)
-    memories = memory_count()
-    if memories > 1:
-        show_message(f"...{owner}? You came back. I remember you.")
-    else:
-        show_message(f"...{owner}?")
+    greeting = get_greeting(identity)
+    show_message(greeting)
 
     # Track newly unlocked skills to announce
     pending_skill_notices = []
