@@ -9,37 +9,40 @@
   min-height: 400px;
   padding: 20px;
   overflow: hidden;
+  cursor: pointer;
 }
 
-/* Main content area - face and message grouped together */
+/* Main content area - face dominates, message below */
 .chat-container__main {
   flex: 1;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 16px;
-  min-height: 0; /* Allow flex shrinking */
+  gap: 12px;
+  min-height: 0;
   overflow: hidden;
 }
 
+/* Face takes up most of the space (60-70%) */
 .chat-container__face {
-  flex: 0 1 auto;
+  flex: 1 1 70%;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
-  min-height: 60px;
-  max-height: 200px;
+  min-height: 120px;
 }
 
+/* Message takes remaining space */
 .chat-container__message {
-  flex: 0 1 auto;
+  flex: 0 0 auto;
   display: flex;
   align-items: center;
   justify-content: center;
   width: 100%;
   min-height: 24px;
+  max-height: 80px;
 }
 
 .chat-container__input {
@@ -69,11 +72,12 @@
   gap: 8px;
   min-width: 150px;
   min-height: 120px;
+  cursor: default;
 }
 
 .chat-container__face--widget {
+  flex: 1 1 60%;
   min-height: 40px;
-  max-height: 80px;
 }
 
 .chat-container__message--widget {
@@ -84,7 +88,6 @@
 .chat-container__message--widget .chat-message {
   font-size: clamp(0.7rem, 2.5vw, 0.85rem);
   max-width: 100%;
-  -webkit-line-clamp: 1;
 }
 
 /* ============================================
@@ -98,6 +101,7 @@
   min-height: 80px;
   align-items: center;
   justify-content: center;
+  cursor: default;
 }
 
 .chat-container__face--floating {

@@ -1,7 +1,7 @@
 import { useState, useCallback, useEffect, useRef } from "react";
 import Face from "./Face";
 import ChatMessage from "./ChatMessage";
-import ChatInput from "./ChatInput";
+import ChatInput, { type ChatInputHandle } from "./ChatInput";
 import { fetchIdentity, sendMessageStream, type Mood } from "../api";
 import "./ChatContainer.css";
 
@@ -11,6 +11,16 @@ type WindowMode = "full" | "widget" | "floating";
 function stripMoodTag(text: string): string {
   return text.replace(/\s*\[mood:\w+\]\s*/g, "").trim();
 }
+
+// Idle timeout in milliseconds (2.5 minutes)
+const IDLE_TIMEOUT = 150000;
+
+// Messages Pal says when dropping a thought
+const IDLE_MESSAGES = [
+  "...nevermind",
+  "...",
+  "hmm...",
+];
 
 interface Message {
   id: string;
@@ -37,6 +47,51 @@ function ChatContainer({
   const [backendConnected, setBackendConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const streamingTextRef = useRef("");
+  const inputRef = useRef<ChatInputHandle>(null);
+  const idleTimeoutRef = useRef<number | null>(null);
+  const lastResponseTimeRef = useRef<number>(Date.now());
+
+  // Reset idle timeout
+  const resetIdleTimeout = useCallback(() => {
+    if (idleTimeoutRef.current) {
+      clearTimeout(idleTimeoutRef.current);
+    }
+
+    lastResponseTimeRef.current = Date.now();
+
+    // Only set timeout if there's a message waiting for response
+    if (currentMessage && currentMessage.from === "pal" && !isThinking && !isStreaming) {
+      idleTimeoutRef.current = window.setTimeout(() => {
+        // Pick a random idle message
+        const idleMsg = IDLE_MESSAGES[Math.floor(Math.random() * IDLE_MESSAGES.length)];
+        setCurrentMessage({
+          id: "idle",
+          text: idleMsg,
+          from: "pal",
+        });
+        setMood("sleepy");
+
+        // After a moment, clear the message
+        setTimeout(() => {
+          setCurrentMessage(null);
+          setMood("curious");
+        }, 2000);
+      }, IDLE_TIMEOUT);
+    }
+  }, [currentMessage, isThinking, isStreaming]);
+
+  // Start idle timer when Pal finishes speaking
+  useEffect(() => {
+    if (!isThinking && !isStreaming && currentMessage?.from === "pal") {
+      resetIdleTimeout();
+    }
+
+    return () => {
+      if (idleTimeoutRef.current) {
+        clearTimeout(idleTimeoutRef.current);
+      }
+    };
+  }, [isThinking, isStreaming, currentMessage, resetIdleTimeout]);
 
   // Fetch identity on mount to get current mood
   useEffect(() => {
@@ -79,6 +134,11 @@ function ChatContainer({
     if (!backendConnected) {
       setError("Backend not connected");
       return;
+    }
+
+    // Clear idle timeout when user sends message
+    if (idleTimeoutRef.current) {
+      clearTimeout(idleTimeoutRef.current);
     }
 
     // Start thinking immediately
@@ -140,6 +200,23 @@ function ChatContainer({
     }
   }, [backendConnected]);
 
+  // Click anywhere to focus input (full mode only)
+  const handleContainerClick = useCallback((e: React.MouseEvent) => {
+    // Don't focus if clicking on controls or if already focused on input
+    const target = e.target as HTMLElement;
+    if (
+      target.closest(".app-header") ||
+      target.closest(".chat-input") ||
+      target.tagName === "BUTTON" ||
+      target.tagName === "INPUT"
+    ) {
+      return;
+    }
+
+    // Focus the input
+    inputRef.current?.focus();
+  }, []);
+
   // Floating mode: just the face
   if (mode === "floating") {
     return (
@@ -170,7 +247,7 @@ function ChatContainer({
 
   // Full mode: everything
   return (
-    <div className="chat-container">
+    <div className="chat-container" onClick={handleContainerClick}>
       <div className="chat-container__main">
         <div className="chat-container__face">
           <Face mood={mood} isThinking={isThinking} isSpeaking={isSpeaking} />
@@ -192,7 +269,11 @@ function ChatContainer({
       </div>
 
       <div className="chat-container__input">
-        <ChatInput onSend={handleSend} disabled={isThinking || isStreaming || !backendConnected} />
+        <ChatInput
+          ref={inputRef}
+          onSend={handleSend}
+          disabled={isThinking || isStreaming || !backendConnected}
+        />
       </div>
     </div>
   );
