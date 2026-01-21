@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
+import { invoke } from "@tauri-apps/api/core";
 import ChatContainer from "./components/ChatContainer";
 import Menu from "./components/Menu";
 import "./App.css";
@@ -29,12 +30,20 @@ function App() {
     setMenuOpen(false);
   }, []);
 
-  // Menu action handlers (placeholders for now)
-  const handleSelectMode = useCallback((mode: WindowMode) => {
-    setWindowMode(mode);
-    console.log(`Switched to ${mode} mode`);
-    // TODO: Implement window mode switching
+  // Set window mode via Tauri command
+  const setMode = useCallback(async (mode: WindowMode) => {
+    try {
+      await invoke("set_window_mode", { mode });
+      setWindowMode(mode);
+    } catch (err) {
+      console.error("Failed to set window mode:", err);
+    }
   }, []);
+
+  // Menu action handlers
+  const handleSelectMode = useCallback((mode: WindowMode) => {
+    setMode(mode);
+  }, [setMode]);
 
   const handleOpenHistory = useCallback(() => {
     console.log("Opening history...");
@@ -61,65 +70,107 @@ function App() {
     await window.close();
   }, []);
 
-  // Right-click to open menu
+  // Right-click to open menu (only in full mode)
   const handleContextMenu = (e: React.MouseEvent) => {
     e.preventDefault();
-    setMenuOpen(true);
+    if (windowMode === "full") {
+      setMenuOpen(true);
+    }
+  };
+
+  // Click to expand from compact modes
+  const handleExpandClick = () => {
+    if (windowMode === "floating") {
+      setMode("widget");
+    } else if (windowMode === "widget") {
+      setMode("full");
+    }
+  };
+
+  // Render based on mode
+  const renderContent = () => {
+    if (windowMode === "floating") {
+      return (
+        <div className="app-floating" onClick={handleExpandClick}>
+          <ChatContainer
+            initialMessage=""
+            mode="floating"
+          />
+        </div>
+      );
+    }
+
+    if (windowMode === "widget") {
+      return (
+        <div className="app-widget" onClick={handleExpandClick}>
+          <ChatContainer
+            initialMessage="Hi! Click to chat..."
+            mode="widget"
+          />
+        </div>
+      );
+    }
+
+    // Full mode
+    return (
+      <>
+        {/* Header with hamburger and window controls */}
+        <header className={`app-header ${headerVisible || menuOpen ? "app-header--visible" : ""}`}>
+          <button
+            className={`hamburger-btn ${menuOpen ? "hamburger-btn--active" : ""}`}
+            onClick={handleHamburgerClick}
+            title="Menu"
+          >
+            <span></span>
+            <span></span>
+            <span></span>
+          </button>
+
+          <div className="window-controls">
+            <button
+              className="window-btn window-btn--minimize"
+              onClick={handleMinimize}
+              title="Minimize"
+            />
+            <button
+              className="window-btn window-btn--close"
+              onClick={handleClose}
+              title="Close"
+            />
+          </div>
+        </header>
+
+        {/* Dropdown menu */}
+        <Menu
+          isOpen={menuOpen}
+          onClose={handleMenuClose}
+          onSelectMode={handleSelectMode}
+          onOpenHistory={handleOpenHistory}
+          onOpenBrain={handleOpenBrain}
+          onOpenSettings={handleOpenSettings}
+          onHide={handleHide}
+          onQuit={handleQuit}
+          currentMode={windowMode}
+        />
+
+        {/* Main content */}
+        <main className="app-content">
+          <ChatContainer initialMessage="Hi! How can I help you today?" mode="full" />
+        </main>
+      </>
+    );
   };
 
   return (
     <div
-      className="app"
-      onMouseEnter={() => setHeaderVisible(true)}
+      className={`app app--${windowMode}`}
+      onMouseEnter={() => windowMode === "full" && setHeaderVisible(true)}
       onMouseLeave={() => {
         setHeaderVisible(false);
-        // Don't close menu on mouse leave - let click outside handle it
       }}
       onContextMenu={handleContextMenu}
     >
-      {/* Header with hamburger and window controls */}
-      <header className={`app-header ${headerVisible || menuOpen ? "app-header--visible" : ""}`}>
-        <button
-          className={`hamburger-btn ${menuOpen ? "hamburger-btn--active" : ""}`}
-          onClick={handleHamburgerClick}
-          title="Menu"
-        >
-          <span></span>
-          <span></span>
-          <span></span>
-        </button>
-
-        <div className="window-controls">
-          <button
-            className="window-btn window-btn--minimize"
-            onClick={handleMinimize}
-            title="Minimize"
-          />
-          <button
-            className="window-btn window-btn--close"
-            onClick={handleClose}
-            title="Close"
-          />
-        </div>
-      </header>
-
-      {/* Dropdown menu */}
-      <Menu
-        isOpen={menuOpen}
-        onClose={handleMenuClose}
-        onSelectMode={handleSelectMode}
-        onOpenHistory={handleOpenHistory}
-        onOpenBrain={handleOpenBrain}
-        onOpenSettings={handleOpenSettings}
-        onHide={handleHide}
-        onQuit={handleQuit}
-        currentMode={windowMode}
-      />
-
-      {/* Main content */}
-      <main className="app-content">
-        <ChatContainer initialMessage="Hi! How can I help you today?" />
-      </main>
+      {renderContent()}
     </div>
   );
 }

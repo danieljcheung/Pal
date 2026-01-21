@@ -97,9 +97,32 @@ Pal's greeting changes based on how long you've been away:
 | 4-24 hours | "dan! I was waiting for you." |
 | 24+ hours | "dan... it's been a while. I missed talking to you." |
 
+## GUI
+
+Pal has a desktop GUI built with Tauri (Rust + React):
+
+### Window Modes
+- **Full mode** - Complete chat interface with input
+- **Widget mode** - Compact face + message display
+- **Floating mode** - Tiny floating face overlay
+
+### System Tray
+- Close button hides to system tray (Pal keeps running)
+- Left-click tray icon to show window
+- Right-click for menu: Show, Full/Widget/Floating mode, Quit
+
+### Running the GUI
+```bash
+cd gui
+npm install
+npm run tauri dev
+```
+
 ## Tech Stack
 
-- **Python** - Core application
+- **Python** - Core backend
+- **Tauri** - Desktop GUI framework (Rust + WebView)
+- **React + TypeScript** - GUI frontend
 - **Anthropic Claude API** - Pal's brain (claude-sonnet)
 - **LanceDB** - Vector memory storage with semantic search
 - **sentence-transformers** - Embedding model (all-MiniLM-L6-v2)
@@ -221,6 +244,10 @@ Early development. Currently:
 - [x] Command line flags
 - [x] Brain visualization dashboard
 - [x] Background dream generation (idle)
+- [x] Desktop GUI (Tauri)
+- [x] System tray integration
+- [x] Window modes (full/widget/floating)
+- [ ] Backend integration (GUI ↔ Python)
 - [ ] Voice
 - [ ] Cross-device sync
 - [ ] Hardware body (Raspberry Pi)

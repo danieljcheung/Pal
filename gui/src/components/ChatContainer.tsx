@@ -5,6 +5,7 @@ import ChatInput from "./ChatInput";
 import "./ChatContainer.css";
 
 type Mood = "happy" | "curious" | "excited" | "thinking" | "confused" | "sad" | "worried" | "sleepy";
+type WindowMode = "full" | "widget" | "floating";
 
 interface Message {
   id: string;
@@ -14,9 +15,13 @@ interface Message {
 
 interface ChatContainerProps {
   initialMessage?: string;
+  mode?: WindowMode;
 }
 
-function ChatContainer({ initialMessage = "Hi! How can I help you today?" }: ChatContainerProps) {
+function ChatContainer({
+  initialMessage = "Hi! How can I help you today?",
+  mode = "full",
+}: ChatContainerProps) {
   const [currentMessage, setCurrentMessage] = useState<Message | null>({
     id: "initial",
     text: initialMessage,
@@ -71,17 +76,48 @@ function ChatContainer({ initialMessage = "Hi! How can I help you today?" }: Cha
     }, 1200);
   }, []);
 
+  // Floating mode: just the face
+  if (mode === "floating") {
+    return (
+      <div className="chat-container chat-container--floating">
+        <div className="chat-container__face chat-container__face--floating">
+          <Face mood={mood} isThinking={isThinking} isSpeaking={isSpeaking} />
+        </div>
+      </div>
+    );
+  }
+
+  // Widget mode: face + message only
+  if (mode === "widget") {
+    return (
+      <div className="chat-container chat-container--widget">
+        <div className="chat-container__face chat-container__face--widget">
+          <Face mood={mood} isThinking={isThinking} isSpeaking={isSpeaking} />
+        </div>
+        <div className="chat-container__message chat-container__message--widget">
+          <ChatMessage
+            text={currentMessage?.text || ""}
+            isThinking={isThinking}
+          />
+        </div>
+      </div>
+    );
+  }
+
+  // Full mode: everything
   return (
     <div className="chat-container">
-      <div className="chat-container__face">
-        <Face mood={mood} isThinking={isThinking} isSpeaking={isSpeaking} />
-      </div>
+      <div className="chat-container__main">
+        <div className="chat-container__face">
+          <Face mood={mood} isThinking={isThinking} isSpeaking={isSpeaking} />
+        </div>
 
-      <div className="chat-container__message">
-        <ChatMessage
-          text={currentMessage?.text || ""}
-          isThinking={isThinking}
-        />
+        <div className="chat-container__message">
+          <ChatMessage
+            text={currentMessage?.text || ""}
+            isThinking={isThinking}
+          />
+        </div>
       </div>
 
       <div className="chat-container__input">

@@ -15,10 +15,13 @@
         "title": "Pal",
         "width": 400,
         "height": 500,
+        "minWidth": 120,
+        "minHeight": 100,
         "resizable": true,
         "transparent": true,
         "decorations": false,
-        "alwaysOnTop": false
+        "alwaysOnTop": false,
+        "skipTaskbar": false
       }
     ],
     "security": {
