@@ -94,6 +94,14 @@ body {
   background: rgba(255, 255, 255, 0.9);
 }
 
+.hamburger-btn--active {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.hamburger-btn--active span {
+  background: rgba(255, 255, 255, 0.9);
+}
+
 /* Window controls */
 .window-controls {
   -webkit-app-region: no-drag;
