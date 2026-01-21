@@ -113,6 +113,7 @@ pal/
 ├── topics.py         # Topic card management
 ├── conversation.py   # Topic tracking + conversation state
 ├── inner_life.py     # Thought queue + dream journal
+├── dashboard.py      # Brain visualization tool
 ├── requirements.txt  # Dependencies
 ├── .env              # API key (create from .env.example)
 └── data/             # Auto-created
@@ -145,6 +146,31 @@ python main.py --reset      # Clear all data, start fresh
 python main.py --skip-birth # Skip birth sequence (for testing)
 python main.py --skip-birth --name Dan  # Skip birth, set owner name
 python main.py --help       # Show all options
+```
+
+### Brain Dashboard
+
+Visualize Pal's internal state:
+
+```bash
+python dashboard.py              # Full dashboard
+python dashboard.py --memories   # List all memories
+python dashboard.py --topics     # Detailed topic view
+python dashboard.py --dreams     # Full dream journal
+python dashboard.py --stats      # Just stats
+python dashboard.py --skills     # Just skills
+```
+
+```
+┌──────────────────────────────── Pal's Brain ────────────────────────────────┐
+│   Born: Jan 21, 2026 (2 days ago)                                           │
+│   Owner: dan                                                                │
+│   Mood: (◕‿◕) happy                                                         │
+└─────────────────────────────────────────────────────────────────────────────┘
+┌────────────────────────────────── Skills ───────────────────────────────────┐
+│   ✓ greet (lvl 2)                   ○ recall ████░░ 18/25                   │
+│   ○ time_sense ████████░░ 47/50     ○ opinions ░░░░░░ 12/100                │
+└─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ## Philosophy
@@ -187,6 +213,7 @@ Early development. Currently:
 - [x] Inner life (thought queue + dream journal)
 - [x] Time-based greetings
 - [x] Command line flags
+- [x] Brain visualization dashboard
 - [ ] Background dream generation (idle)
 - [ ] Voice
 - [ ] Cross-device sync
