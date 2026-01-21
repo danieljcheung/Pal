@@ -10,7 +10,6 @@ Pal is a curious, gentle AI companion that:
 - Remembers everything via semantic memory search
 - Has a kaomoji face that reflects its mood
 - Develops skills over time based on your interactions
-- Feels alive—like Dobby from Harry Potter or JARVIS from Iron Man
 
 ## Features
 
