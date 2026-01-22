@@ -69,10 +69,20 @@ export interface InnerLife {
   dreams_since_last_conversation: number;
 }
 
+export interface Topic {
+  display_name: string;
+  first_mentioned: string;
+  last_discussed: string;
+  times_discussed: number;
+  memories: string[];
+  understanding: "surface" | "basic" | "familiar" | "knowledgeable";
+  unresolved: string[];
+}
+
 export interface Brain {
   stats: Stats;
   skills: Record<string, Skill>;
-  topics: Record<string, unknown>;
+  topics: Record<string, Topic>;
   inner_life: InnerLife;
   memory_count: number;
 }

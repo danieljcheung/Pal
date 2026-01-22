@@ -1,0 +1,370 @@
+/* BrainPanel Styles - Dark Glass Aesthetic */
+
+/* Backdrop */
+.brain-panel__backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0);
+  pointer-events: none;
+  transition: background 0.3s ease;
+  z-index: 199;
+}
+
+.brain-panel__backdrop--visible {
+  background: rgba(0, 0, 0, 0.4);
+  pointer-events: auto;
+}
+
+/* Panel */
+.brain-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  bottom: 0;
+  width: 320px;
+  max-width: 90vw;
+  background: rgba(16, 18, 22, 0.95);
+  backdrop-filter: blur(20px);
+  -webkit-backdrop-filter: blur(20px);
+  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  z-index: 200;
+  display: flex;
+  flex-direction: column;
+
+  /* Slide animation */
+  transform: translateX(100%);
+  opacity: 0;
+  transition: transform 0.3s ease, opacity 0.3s ease;
+}
+
+.brain-panel--open {
+  transform: translateX(0);
+  opacity: 1;
+}
+
+/* Header */
+.brain-panel__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  flex-shrink: 0;
+}
+
+.brain-panel__title {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.brain-panel__title-text {
+  font-size: 1rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.9);
+  letter-spacing: 0.02em;
+}
+
+.brain-panel__age {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.brain-panel__close {
+  background: transparent;
+  border: none;
+  font-size: 1.5rem;
+  color: rgba(255, 255, 255, 0.5);
+  cursor: pointer;
+  padding: 4px 8px;
+  line-height: 1;
+  transition: color 0.2s ease;
+}
+
+.brain-panel__close:hover {
+  color: rgba(255, 255, 255, 0.9);
+}
+
+/* Content */
+.brain-panel__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 16px 20px;
+}
+
+.brain-panel__loading,
+.brain-panel__error {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+  padding: 40px 20px;
+  font-size: 0.85rem;
+}
+
+.brain-panel__error {
+  color: rgba(255, 100, 100, 0.7);
+}
+
+/* Sections */
+.brain-panel__section {
+  margin-bottom: 24px;
+}
+
+.brain-panel__section:last-child {
+  margin-bottom: 0;
+}
+
+.brain-panel__section-title {
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  margin-bottom: 12px;
+}
+
+/* Stats Grid */
+.brain-panel__stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.brain-panel__stat {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  padding: 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.brain-panel__stat-value {
+  font-size: 1.5rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.9);
+  font-variant-numeric: tabular-nums;
+}
+
+.brain-panel__stat-label {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+/* Skills List */
+.brain-panel__skills {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.brain-panel__skill {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+.brain-panel__skill--unlocked {
+  background: rgba(100, 200, 150, 0.08);
+  border-color: rgba(100, 200, 150, 0.15);
+}
+
+.brain-panel__skill--locked {
+  opacity: 0.7;
+}
+
+.brain-panel__skill-icon {
+  font-size: 0.8rem;
+  width: 16px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.brain-panel__skill--unlocked .brain-panel__skill-icon {
+  color: rgba(100, 200, 150, 0.9);
+}
+
+.brain-panel__skill-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.brain-panel__skill-name {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.brain-panel__skill-level {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  margin-left: auto;
+}
+
+.brain-panel__skill-progress {
+  position: relative;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.brain-panel__skill-progress-bar {
+  position: absolute;
+  top: 0;
+  left: 0;
+  height: 100%;
+  background: rgba(255, 255, 255, 0.3);
+  border-radius: 2px;
+  transition: width 0.3s ease;
+}
+
+.brain-panel__skill-progress-text {
+  position: absolute;
+  right: 0;
+  top: -16px;
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Topics List */
+.brain-panel__topics {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.brain-panel__topic {
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  border-radius: 6px;
+}
+
+.brain-panel__topic-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.brain-panel__topic-name {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.brain-panel__topic-questions {
+  font-size: 0.7rem;
+  color: rgba(255, 200, 100, 0.7);
+  padding: 2px 6px;
+  background: rgba(255, 200, 100, 0.1);
+  border-radius: 10px;
+}
+
+.brain-panel__topic-level {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.brain-panel__topic-level-bar {
+  display: flex;
+  gap: 3px;
+  flex: 1;
+}
+
+.brain-panel__topic-level-segment {
+  height: 4px;
+  flex: 1;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+}
+
+.brain-panel__topic-level-segment--filled {
+  background: rgba(150, 180, 255, 0.6);
+}
+
+.brain-panel__topic-level-label {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+  min-width: 70px;
+  text-align: right;
+}
+
+/* Inner Life */
+.brain-panel__inner-subsection {
+  margin-bottom: 16px;
+}
+
+.brain-panel__inner-subsection:last-child {
+  margin-bottom: 0;
+}
+
+.brain-panel__subsection-title {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.35);
+  margin-bottom: 8px;
+}
+
+.brain-panel__thoughts,
+.brain-panel__dreams {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.brain-panel__thought,
+.brain-panel__dream {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
+  padding: 8px 12px;
+  background: rgba(255, 255, 255, 0.02);
+  border-left: 2px solid rgba(255, 255, 255, 0.1);
+  border-radius: 0 4px 4px 0;
+}
+
+/* Preferences */
+.brain-panel__preferences {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+  font-size: 0.8rem;
+}
+
+.brain-panel__pref-label {
+  color: rgba(255, 255, 255, 0.5);
+  min-width: 60px;
+}
+
+.brain-panel__pref-list {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+/* Scrollbar */
+.brain-panel__content::-webkit-scrollbar {
+  width: 6px;
+}
+
+.brain-panel__content::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.brain-panel__content::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 3px;
+}
+
+.brain-panel__content::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}

@@ -3,6 +3,7 @@ import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
 import ChatContainer from "./components/ChatContainer";
 import Menu from "./components/Menu";
+import BrainPanel from "./components/BrainPanel";
 import "./App.css";
 
 type WindowMode = "full" | "widget" | "floating";
@@ -11,6 +12,7 @@ function App() {
   const [headerVisible, setHeaderVisible] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [windowMode, setWindowMode] = useState<WindowMode>("full");
+  const [brainPanelOpen, setBrainPanelOpen] = useState(false);
 
   const handleClose = async () => {
     const window = getCurrentWindow();
@@ -51,8 +53,7 @@ function App() {
   }, []);
 
   const handleOpenBrain = useCallback(() => {
-    console.log("Opening Pal's Brain...");
-    // TODO: Implement brain visualization
+    setBrainPanelOpen(true);
   }, []);
 
   const handleOpenSettings = useCallback(() => {
@@ -151,6 +152,12 @@ function App() {
           onHide={handleHide}
           onQuit={handleQuit}
           currentMode={windowMode}
+        />
+
+        {/* Brain panel */}
+        <BrainPanel
+          isOpen={brainPanelOpen}
+          onClose={() => setBrainPanelOpen(false)}
         />
 
         {/* Main content */}
