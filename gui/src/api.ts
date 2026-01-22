@@ -241,3 +241,133 @@ export async function checkHealth(): Promise<boolean> {
     return false;
   }
 }
+
+// === Research API ===
+
+export interface ResearchResponse {
+  success: boolean;
+  summary: string;
+  topic: string;
+  facts_stored: number;
+  questions: string[];
+  sources?: string[];
+  error: string | null;
+  skill_locked: boolean;
+}
+
+/**
+ * Research a URL - fetch, process, and learn from it.
+ */
+export async function researchUrl(url: string): Promise<ResearchResponse> {
+  const response = await fetch(`${API_BASE}/research/url`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ url }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Research failed: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Research via web search - search, read, and learn.
+ */
+export async function researchSearch(query: string): Promise<ResearchResponse> {
+  const response = await fetch(`${API_BASE}/research/search`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ query }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Research failed: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Research provided text - process and learn from it.
+ */
+export async function researchText(text: string): Promise<ResearchResponse> {
+  const response = await fetch(`${API_BASE}/research/text`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ text }),
+  });
+
+  if (!response.ok) {
+    throw new Error(`Research failed: ${response.statusText}`);
+  }
+
+  return response.json();
+}
+
+/**
+ * Detect research intent from user message.
+ * Returns { type, content } or null if not a research request.
+ */
+export function detectResearchIntent(
+  message: string
+): { type: "url" | "search" | "text"; content: string } | null {
+  const messageLower = message.toLowerCase().trim();
+
+  // Check for URL
+  const urlPattern = /https?:\/\/[^\s<>"{}|\\^`[\]]+/;
+  const urlMatch = message.match(urlPattern);
+  if (urlMatch) {
+    // Check for trigger phrases
+    const urlTriggers = [
+      "read this",
+      "look at this",
+      "check this",
+      "learn from",
+      "read about",
+    ];
+    if (urlTriggers.some((trigger) => messageLower.includes(trigger)) || urlMatch) {
+      return { type: "url", content: urlMatch[0] };
+    }
+  }
+
+  // Check for search intent
+  const searchPatterns = [
+    /(?:look up|search for|search|find out about|learn about|research)\s+(.+)/i,
+    /what (?:is|are|does|do)\s+(.+)\??/i,
+  ];
+  for (const pattern of searchPatterns) {
+    const match = messageLower.match(pattern);
+    if (match) {
+      const query = match[1].trim().replace(/\?$/, "");
+      if (query.length > 2) {
+        return { type: "search", content: query };
+      }
+    }
+  }
+
+  // Check for direct text learning
+  const textPatterns = [
+    /learn this[:\s]+(.+)/is,
+    /remember this[:\s]+(.+)/is,
+    /here'?s? (?:some )?(?:info|information)[:\s]+(.+)/is,
+  ];
+  for (const pattern of textPatterns) {
+    const match = message.match(pattern);
+    if (match) {
+      const text = match[1].trim();
+      if (text.length > 20) {
+        return { type: "text", content: text };
+      }
+    }
+  }
+
+  return null;
+}

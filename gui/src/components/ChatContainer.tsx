@@ -2,7 +2,16 @@ import { useState, useCallback, useEffect, useRef } from "react";
 import Face from "./Face";
 import ChatMessage from "./ChatMessage";
 import ChatInput, { type ChatInputHandle } from "./ChatInput";
-import { fetchIdentity, sendMessageStream, type Mood } from "../api";
+import {
+  fetchIdentity,
+  sendMessageStream,
+  detectResearchIntent,
+  researchUrl,
+  researchSearch,
+  researchText,
+  type Mood,
+  type ResearchResponse,
+} from "../api";
 import "./ChatContainer.css";
 
 type WindowMode = "full" | "widget" | "floating";
@@ -21,6 +30,35 @@ const IDLE_MESSAGES = [
   "...",
   "hmm...",
 ];
+
+// Messages Pal says when starting research
+const RESEARCH_MESSAGES = {
+  url: ["Let me read that...", "Looking at that link...", "I'll check it out..."],
+  search: ["Let me search for that...", "I'll look that up...", "Searching..."],
+  text: ["That's a lot. Let me read it...", "Let me process that...", "Reading..."],
+};
+
+// Format research response into a message
+function formatResearchResponse(result: ResearchResponse): string {
+  if (!result.success) {
+    return result.error || "I couldn't do that research.";
+  }
+
+  let response = result.summary;
+
+  // Add facts stored
+  if (result.facts_stored > 0) {
+    response += ` I remembered ${result.facts_stored} thing${result.facts_stored > 1 ? "s" : ""} about ${result.topic}.`;
+  }
+
+  // Add questions
+  if (result.questions && result.questions.length > 0) {
+    const question = result.questions[0];
+    response += ` I'm still wondering though - ${question}`;
+  }
+
+  return response;
+}
 
 interface Message {
   id: string;
@@ -44,6 +82,7 @@ function ChatContainer({
   const [isThinking, setIsThinking] = useState(false);
   const [isStreaming, setIsStreaming] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
+  const [isResearching, setIsResearching] = useState(false);
   const [backendConnected, setBackendConnected] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const streamingTextRef = useRef("");
@@ -141,15 +180,88 @@ function ChatContainer({
       clearTimeout(idleTimeoutRef.current);
     }
 
-    // Start thinking immediately
+    const messageId = Date.now().toString();
+
+    // Check for research intent
+    const researchIntent = detectResearchIntent(text);
+
+    if (researchIntent) {
+      // Research request - handle differently
+      setIsResearching(true);
+      setIsThinking(true);
+      setIsStreaming(false);
+      setMood("thinking");
+      setError(null);
+
+      // Show initial research message
+      const messages = RESEARCH_MESSAGES[researchIntent.type];
+      const initialMsg = messages[Math.floor(Math.random() * messages.length)];
+      setCurrentMessage({
+        id: messageId,
+        text: initialMsg,
+        from: "pal",
+      });
+
+      try {
+        let result: ResearchResponse;
+
+        // Call appropriate research endpoint
+        switch (researchIntent.type) {
+          case "url":
+            result = await researchUrl(researchIntent.content);
+            break;
+          case "search":
+            result = await researchSearch(researchIntent.content);
+            break;
+          case "text":
+            result = await researchText(researchIntent.content);
+            break;
+        }
+
+        // Format and display response
+        const responseText = formatResearchResponse(result);
+        setCurrentMessage({
+          id: messageId,
+          text: responseText,
+          from: "pal",
+        });
+
+        // Set mood based on success
+        if (result.skill_locked) {
+          setMood("confused");
+        } else if (result.success) {
+          setMood("happy");
+        } else {
+          setMood("confused");
+        }
+
+        // Brief bounce effect
+        setIsSpeaking(true);
+        setTimeout(() => setIsSpeaking(false), 250);
+
+      } catch (err) {
+        setMood("confused");
+        setError("Research failed");
+        setCurrentMessage({
+          id: messageId,
+          text: "...something went wrong while I was reading that.",
+          from: "pal",
+        });
+      } finally {
+        setIsResearching(false);
+        setIsThinking(false);
+      }
+
+      return;
+    }
+
+    // Normal chat flow
     setIsThinking(true);
     setIsStreaming(false);
     setMood("thinking");
     setCurrentMessage(null);
     setError(null);
     streamingTextRef.current = "";
-
-    const messageId = Date.now().toString();
 
     try {
       await sendMessageStream(
@@ -272,7 +384,7 @@ function ChatContainer({
         <ChatInput
           ref={inputRef}
           onSend={handleSend}
-          disabled={isThinking || isStreaming || !backendConnected}
+          disabled={isThinking || isStreaming || isResearching || !backendConnected}
         />
       </div>
     </div>

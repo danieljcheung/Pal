@@ -6,3 +6,6 @@ pyarrow
 rich
 fastapi
 uvicorn
+requests
+beautifulsoup4
+ddgs

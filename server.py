@@ -16,6 +16,8 @@ from stats import track_message, track_memory_stored, track_check_in
 from skills import check_unlocks
 from topics import load_topics, add_unresolved_question, save_topics, create_topic
 from inner_life import detect_unanswered_question
+from research import research_url, research_search, research_text
+from skills import is_skill_unlocked
 
 
 # Global identity state
@@ -121,6 +123,29 @@ class BrainResponse(BaseModel):
     inner_life: dict
     memory_count: int
     memories: list
+
+
+class ResearchUrlRequest(BaseModel):
+    url: str
+
+
+class ResearchSearchRequest(BaseModel):
+    query: str
+
+
+class ResearchTextRequest(BaseModel):
+    text: str
+
+
+class ResearchResponse(BaseModel):
+    success: bool
+    summary: str
+    topic: str
+    facts_stored: int
+    questions: list[str]
+    sources: list[str] = []
+    error: str | None = None
+    skill_locked: bool = False
 
 
 @app.get("/")
@@ -348,6 +373,83 @@ async def reset_session():
     identity = reset_session_state(identity)
     save_and_update_identity(identity)
     return {"status": "ok"}
+
+
+def _check_research_skill() -> tuple[bool, ResearchResponse | None]:
+    """Check if research skill is unlocked. Returns (is_unlocked, error_response)."""
+    identity = get_identity()
+    if not is_skill_unlocked(identity, "research"):
+        return False, ResearchResponse(
+            success=False,
+            summary="",
+            topic="",
+            facts_stored=0,
+            questions=[],
+            error="I don't know how to do that yet... maybe someday.",
+            skill_locked=True,
+        )
+    return True, None
+
+
+@app.post("/research/url", response_model=ResearchResponse)
+async def research_url_endpoint(request: ResearchUrlRequest):
+    """Research a URL - fetch, process, and learn from it."""
+    # Check skill unlock
+    unlocked, error_response = _check_research_skill()
+    if not unlocked:
+        return error_response
+
+    result = research_url(request.url)
+
+    return ResearchResponse(
+        success=result["success"],
+        summary=result["summary"],
+        topic=result["topic"],
+        facts_stored=result["facts_stored"],
+        questions=result["questions"],
+        error=result["error"],
+    )
+
+
+@app.post("/research/search", response_model=ResearchResponse)
+async def research_search_endpoint(request: ResearchSearchRequest):
+    """Research via web search - search, read, and learn."""
+    # Check skill unlock
+    unlocked, error_response = _check_research_skill()
+    if not unlocked:
+        return error_response
+
+    result = research_search(request.query)
+
+    return ResearchResponse(
+        success=result["success"],
+        summary=result["summary"],
+        topic=result["topic"],
+        facts_stored=result["facts_stored"],
+        questions=result["questions"],
+        sources=result.get("sources", []),
+        error=result["error"],
+    )
+
+
+@app.post("/research/text", response_model=ResearchResponse)
+async def research_text_endpoint(request: ResearchTextRequest):
+    """Research provided text - process and learn from it."""
+    # Check skill unlock
+    unlocked, error_response = _check_research_skill()
+    if not unlocked:
+        return error_response
+
+    result = research_text(request.text)
+
+    return ResearchResponse(
+        success=result["success"],
+        summary=result["summary"],
+        topic=result["topic"],
+        facts_stored=result["facts_stored"],
+        questions=result["questions"],
+        error=result["error"],
+    )
 
 
 if __name__ == "__main__":
