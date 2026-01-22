@@ -142,9 +142,30 @@ def search_memories(query: str, limit: int = 5) -> list[dict]:
 
 
 def get_all_memories() -> list[dict]:
-    """Get all stored memories by searching with empty-ish query."""
-    # Use search with high limit as workaround for listing all
-    return search_memories("", limit=100)
+    """Get all stored memories sorted by timestamp (newest first)."""
+    table = _get_table()
+
+    if table.count_rows() == 0:
+        return []
+
+    # Get all records from the table
+    results = table.to_pandas()
+
+    # Sort by timestamp descending (newest first)
+    results = results.sort_values("timestamp", ascending=False)
+
+    # Convert to list of dicts without vector
+    memories = []
+    for _, row in results.iterrows():
+        memories.append({
+            "id": row["id"],
+            "content": row["content"],
+            "type": row["type"],
+            "source": row["source"],
+            "timestamp": row["timestamp"],
+        })
+
+    return memories
 
 
 def memory_count() -> int:

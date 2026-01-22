@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { fetchBrain, fetchIdentity, type Brain, type Identity, type Topic } from "../api";
+import { fetchBrain, fetchIdentity, type Brain, type Identity, type Topic, type Memory } from "../api";
 import "./BrainPanel.css";
 
 interface BrainPanelProps {
@@ -7,7 +7,29 @@ interface BrainPanelProps {
   onClose: () => void;
 }
 
-type TabType = "overview" | "skills" | "knowledge" | "thoughts";
+type TabType = "overview" | "skills" | "knowledge" | "memories" | "thoughts";
+
+// Format relative time (e.g., "2 hours ago", "3 days ago")
+function formatRelativeTime(timestamp: string): string {
+  const date = new Date(timestamp);
+  const now = new Date();
+  const diffMs = now.getTime() - date.getTime();
+  const diffSec = Math.floor(diffMs / 1000);
+  const diffMin = Math.floor(diffSec / 60);
+  const diffHour = Math.floor(diffMin / 60);
+  const diffDay = Math.floor(diffHour / 24);
+
+  if (diffSec < 60) return "just now";
+  if (diffMin < 60) return `${diffMin} minute${diffMin === 1 ? "" : "s"} ago`;
+  if (diffHour < 24) return `${diffHour} hour${diffHour === 1 ? "" : "s"} ago`;
+  if (diffDay < 30) return `${diffDay} day${diffDay === 1 ? "" : "s"} ago`;
+
+  const diffMonth = Math.floor(diffDay / 30);
+  if (diffMonth < 12) return `${diffMonth} month${diffMonth === 1 ? "" : "s"} ago`;
+
+  const diffYear = Math.floor(diffMonth / 12);
+  return `${diffYear} year${diffYear === 1 ? "" : "s"} ago`;
+}
 
 // Evolution stages based on level
 const EVOLUTION_STAGES = [
@@ -379,7 +401,7 @@ function BrainPanel({ isOpen, onClose }: BrainPanelProps) {
 
             {/* Tabs */}
             <nav className="brain-tabs">
-              {(["overview", "skills", "knowledge", "thoughts"] as TabType[]).map((tab) => (
+              {(["overview", "skills", "knowledge", "memories", "thoughts"] as TabType[]).map((tab) => (
                 <button
                   key={tab}
                   className={`brain-tab ${activeTab === tab ? "brain-tab--active" : ""}`}
@@ -481,6 +503,31 @@ function BrainPanel({ isOpen, onClose }: BrainPanelProps) {
                         </div>
                       )}
                     </>
+                  )}
+                </div>
+              )}
+
+              {activeTab === "memories" && (
+                <div className="brain-memories">
+                  {(brain?.memories?.length || 0) === 0 ? (
+                    <div className="brain-empty">No memories yet</div>
+                  ) : (
+                    <div className="memories-list">
+                      {brain?.memories.map((memory: Memory) => (
+                        <div key={memory.id} className="memory-item">
+                          <div className="memory-item__content">"{memory.content}"</div>
+                          <div className="memory-item__meta">
+                            <span className="memory-item__time">{formatRelativeTime(memory.timestamp)}</span>
+                            {memory.type && (
+                              <>
+                                <span className="memory-item__dot">&middot;</span>
+                                <span className="memory-item__type">{memory.type}</span>
+                              </>
+                            )}
+                          </div>
+                        </div>
+                      ))}
+                    </div>
                   )}
                 </div>
               )}

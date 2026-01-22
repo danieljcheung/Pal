@@ -85,6 +85,7 @@ export interface Brain {
   topics: Record<string, Topic>;
   inner_life: InnerLife;
   memory_count: number;
+  memories: Memory[];
 }
 
 export interface Memory {

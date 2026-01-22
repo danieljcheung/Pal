@@ -609,6 +609,64 @@
 }
 
 /* ============================================
+   Memories Tab
+   ============================================ */
+
+.brain-memories {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.memories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.memory-item {
+  padding: 12px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 10px;
+  transition: background 0.2s ease;
+}
+
+.memory-item:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
+
+.memory-item__content {
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.8);
+  line-height: 1.4;
+  margin-bottom: 8px;
+}
+
+.memory-item__meta {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.memory-item__time {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.memory-item__dot {
+  color: rgba(255, 255, 255, 0.2);
+}
+
+.memory-item__type {
+  color: rgba(255, 255, 255, 0.35);
+  padding: 2px 6px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 4px;
+}
+
+/* ============================================
    Thoughts Tab
    ============================================ */
 

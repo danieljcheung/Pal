@@ -90,6 +90,7 @@ class BrainResponse(BaseModel):
     topics: dict
     inner_life: dict
     memory_count: int
+    memories: list
 
 
 @app.get("/")
@@ -285,6 +286,7 @@ async def get_brain():
     """Get Pal's brain data for visualization."""
     identity = get_identity()
     topics = load_topics()
+    memories = get_all_memories()
 
     return BrainResponse(
         stats=identity.get("stats", {}),
@@ -292,6 +294,7 @@ async def get_brain():
         topics=topics,
         inner_life=identity.get("inner_life", {}),
         memory_count=memory_count(),
+        memories=memories,
     )
 
 
