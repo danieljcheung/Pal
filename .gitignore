@@ -10,9 +10,8 @@ __pycache__/
 .Python
 *.so
 
-# Pal data (personal memories and identity)
-data/memories/
-data/identity.json
+# Pal data (personal memories, identity, topics)
+data/
 
 # Environment
 .env
