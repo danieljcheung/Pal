@@ -1,7 +1,7 @@
 /* Face Component Styles */
 
 .face {
-  font-family: 'SF Mono', 'Consolas', 'Monaco', monospace;
+  font-family: "Space Mono", "SF Mono", "Consolas", monospace;
   font-size: 4rem;
   line-height: 1;
   text-align: center;

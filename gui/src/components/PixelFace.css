@@ -23,8 +23,8 @@
   width: 8em;
   min-width: 8em;
 
-  /* Monospace font for consistent character width */
-  font-family: "SF Mono", "Cascadia Code", "Consolas", "Monaco", "Courier New", monospace;
+  /* Digital/techy font - Space Mono with fallbacks */
+  font-family: "Space Mono", "SF Mono", "Cascadia Code", "Consolas", monospace;
   font-size: clamp(2rem, 7vw, 5rem);
   font-weight: 400;
   line-height: 1;
