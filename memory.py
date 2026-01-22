@@ -145,25 +145,26 @@ def get_all_memories() -> list[dict]:
     """Get all stored memories sorted by timestamp (newest first)."""
     table = _get_table()
 
-    if table.count_rows() == 0:
+    row_count = table.count_rows()
+    if row_count == 0:
         return []
 
-    # Get all records from the table
-    results = table.to_pandas()
+    # Get all records using PyArrow
+    arrow_table = table.to_arrow()
+
+    # Convert to list of dicts
+    memories = []
+    for i in range(arrow_table.num_rows):
+        memories.append({
+            "id": str(arrow_table["id"][i]),
+            "content": str(arrow_table["content"][i]),
+            "type": str(arrow_table["type"][i]),
+            "source": str(arrow_table["source"][i]),
+            "timestamp": str(arrow_table["timestamp"][i]),
+        })
 
     # Sort by timestamp descending (newest first)
-    results = results.sort_values("timestamp", ascending=False)
-
-    # Convert to list of dicts without vector
-    memories = []
-    for _, row in results.iterrows():
-        memories.append({
-            "id": row["id"],
-            "content": row["content"],
-            "type": row["type"],
-            "source": row["source"],
-            "timestamp": row["timestamp"],
-        })
+    memories.sort(key=lambda m: m["timestamp"], reverse=True)
 
     return memories
 
