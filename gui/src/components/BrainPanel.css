@@ -1,370 +1,687 @@
-/* BrainPanel Styles - Dark Glass Aesthetic */
+/* BrainPanel - RPG Skill Tree Overlay with Apple Glass Aesthetic */
 
-/* Backdrop */
-.brain-panel__backdrop {
+/* ============================================
+   Overlay & Panel Container
+   ============================================ */
+
+.brain-overlay {
   position: fixed;
   top: 0;
   left: 0;
   right: 0;
   bottom: 0;
-  background: rgba(0, 0, 0, 0);
-  pointer-events: none;
-  transition: background 0.3s ease;
-  z-index: 199;
-}
-
-.brain-panel__backdrop--visible {
-  background: rgba(0, 0, 0, 0.4);
-  pointer-events: auto;
-}
-
-/* Panel */
-.brain-panel {
-  position: fixed;
-  top: 0;
-  right: 0;
-  bottom: 0;
-  width: 320px;
-  max-width: 90vw;
-  background: rgba(16, 18, 22, 0.95);
-  backdrop-filter: blur(20px);
-  -webkit-backdrop-filter: blur(20px);
-  border-left: 1px solid rgba(255, 255, 255, 0.08);
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  -webkit-backdrop-filter: blur(8px);
   z-index: 200;
   display: flex;
-  flex-direction: column;
-
-  /* Slide animation */
-  transform: translateX(100%);
-  opacity: 0;
-  transition: transform 0.3s ease, opacity 0.3s ease;
-}
-
-.brain-panel--open {
-  transform: translateX(0);
-  opacity: 1;
-}
-
-/* Header */
-.brain-panel__header {
-  display: flex;
   align-items: center;
-  justify-content: space-between;
-  padding: 16px 20px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
-  flex-shrink: 0;
+  justify-content: center;
+  padding: 20px;
+
+  /* Fade in */
+  animation: overlay-fade-in 0.25s ease;
 }
 
-.brain-panel__title {
+@keyframes overlay-fade-in {
+  from {
+    opacity: 0;
+    backdrop-filter: blur(0px);
+  }
+  to {
+    opacity: 1;
+    backdrop-filter: blur(8px);
+  }
+}
+
+.brain-panel {
+  position: relative;
+  width: 100%;
+  max-width: 480px;
+  max-height: 90vh;
+  background: rgba(20, 22, 26, 0.92);
+  backdrop-filter: blur(40px);
+  -webkit-backdrop-filter: blur(40px);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 20px;
+  box-shadow:
+    0 25px 50px rgba(0, 0, 0, 0.4),
+    0 0 0 1px rgba(255, 255, 255, 0.05) inset;
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  overflow: hidden;
+
+  /* Scale in */
+  animation: panel-scale-in 0.3s ease;
 }
 
-.brain-panel__title-text {
-  font-size: 1rem;
-  font-weight: 500;
-  color: rgba(255, 255, 255, 0.9);
-  letter-spacing: 0.02em;
-}
-
-.brain-panel__age {
-  font-size: 0.75rem;
-  color: rgba(255, 255, 255, 0.4);
+@keyframes panel-scale-in {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
 }
 
 .brain-panel__close {
-  background: transparent;
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  width: 28px;
+  height: 28px;
+  background: rgba(255, 255, 255, 0.08);
   border: none;
-  font-size: 1.5rem;
+  border-radius: 50%;
   color: rgba(255, 255, 255, 0.5);
+  font-size: 18px;
   cursor: pointer;
-  padding: 4px 8px;
-  line-height: 1;
-  transition: color 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  z-index: 10;
 }
 
 .brain-panel__close:hover {
+  background: rgba(255, 255, 255, 0.15);
   color: rgba(255, 255, 255, 0.9);
-}
-
-/* Content */
-.brain-panel__content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 16px 20px;
 }
 
 .brain-panel__loading,
 .brain-panel__error {
+  padding: 60px 20px;
   text-align: center;
   color: rgba(255, 255, 255, 0.5);
-  padding: 40px 20px;
-  font-size: 0.85rem;
+  font-size: 0.9rem;
 }
 
 .brain-panel__error {
-  color: rgba(255, 100, 100, 0.7);
+  color: rgba(255, 120, 120, 0.8);
 }
 
-/* Sections */
-.brain-panel__section {
-  margin-bottom: 24px;
+/* ============================================
+   Header - Level & XP
+   ============================================ */
+
+.brain-header {
+  padding: 28px 24px 20px;
+  text-align: center;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.brain-panel__section:last-child {
-  margin-bottom: 0;
-}
-
-.brain-panel__section-title {
+.brain-header__title {
   font-size: 0.7rem;
   font-weight: 600;
+  letter-spacing: 0.3em;
   color: rgba(255, 255, 255, 0.4);
-  text-transform: uppercase;
-  letter-spacing: 0.1em;
+  margin-bottom: 4px;
+}
+
+.brain-header__level {
+  font-size: 1.4rem;
+  font-weight: 300;
+  color: rgba(255, 255, 255, 0.95);
   margin-bottom: 12px;
 }
 
-/* Stats Grid */
-.brain-panel__stats {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
-}
-
-.brain-panel__stat {
-  background: rgba(255, 255, 255, 0.03);
-  border: 1px solid rgba(255, 255, 255, 0.06);
-  border-radius: 8px;
-  padding: 12px;
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-}
-
-.brain-panel__stat-value {
-  font-size: 1.5rem;
-  font-weight: 300;
-  color: rgba(255, 255, 255, 0.9);
-  font-variant-numeric: tabular-nums;
-}
-
-.brain-panel__stat-label {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.4);
-  text-transform: uppercase;
-  letter-spacing: 0.05em;
-}
-
-/* Skills List */
-.brain-panel__skills {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-}
-
-.brain-panel__skill {
+.brain-header__xp {
   display: flex;
   align-items: center;
-  gap: 10px;
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
+  justify-content: center;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.brain-panel__skill--unlocked {
-  background: rgba(100, 200, 150, 0.08);
-  border-color: rgba(100, 200, 150, 0.15);
-}
-
-.brain-panel__skill--locked {
-  opacity: 0.7;
-}
-
-.brain-panel__skill-icon {
-  font-size: 0.8rem;
-  width: 16px;
-  text-align: center;
-  color: rgba(255, 255, 255, 0.5);
-}
-
-.brain-panel__skill--unlocked .brain-panel__skill-icon {
-  color: rgba(100, 200, 150, 0.9);
-}
-
-.brain-panel__skill-info {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-}
-
-.brain-panel__skill-name {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.brain-panel__skill-level {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.4);
-  margin-left: auto;
-}
-
-.brain-panel__skill-progress {
-  position: relative;
+.xp-bar {
+  width: 160px;
   height: 4px;
   background: rgba(255, 255, 255, 0.1);
   border-radius: 2px;
   overflow: hidden;
 }
 
-.brain-panel__skill-progress-bar {
-  position: absolute;
-  top: 0;
-  left: 0;
+.xp-bar__fill {
   height: 100%;
-  background: rgba(255, 255, 255, 0.3);
+  background: linear-gradient(90deg, rgba(255, 255, 255, 0.4), rgba(255, 255, 255, 0.6));
   border-radius: 2px;
-  transition: width 0.3s ease;
+  transition: width 0.5s ease;
 }
 
-.brain-panel__skill-progress-text {
-  position: absolute;
-  right: 0;
-  top: -16px;
-  font-size: 0.65rem;
+.xp-bar__text {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  font-variant-numeric: tabular-nums;
+  min-width: 60px;
+}
+
+/* Evolution Path */
+.evolution-path {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex-wrap: wrap;
+}
+
+.evolution-stage {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.25);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.evolution-stage--past {
   color: rgba(255, 255, 255, 0.4);
 }
 
-/* Topics List */
-.brain-panel__topics {
+.evolution-stage--current {
+  color: rgba(255, 255, 255, 0.9);
+  font-weight: 500;
+}
+
+.evolution-arrow {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.65rem;
+}
+
+/* ============================================
+   Tabs
+   ============================================ */
+
+.brain-tabs {
+  display: flex;
+  padding: 0 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.brain-tab {
+  flex: 1;
+  padding: 12px 8px;
+  background: transparent;
+  border: none;
+  color: rgba(255, 255, 255, 0.4);
+  font-size: 0.75rem;
+  font-weight: 500;
+  cursor: pointer;
+  position: relative;
+  transition: color 0.2s ease;
+}
+
+.brain-tab:hover {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.brain-tab--active {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.brain-tab--active::after {
+  content: "";
+  position: absolute;
+  bottom: -1px;
+  left: 20%;
+  right: 20%;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 1px;
+}
+
+/* ============================================
+   Content Area
+   ============================================ */
+
+.brain-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  min-height: 300px;
+}
+
+.brain-empty {
+  text-align: center;
+  color: rgba(255, 255, 255, 0.3);
+  padding: 40px 20px;
+  font-size: 0.85rem;
+}
+
+/* ============================================
+   Overview Tab
+   ============================================ */
+
+.brain-overview {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+/* Stats */
+.brain-stats {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.brain-stat {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.brain-stat__label {
+  width: 80px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.brain-stat__bar {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 3px;
+  overflow: hidden;
+}
+
+.brain-stat__fill {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 3px;
+  transition: width 0.5s ease;
+}
+
+.brain-stat__value,
+.brain-stat__number {
+  width: 40px;
+  text-align: right;
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.7);
+  font-variant-numeric: tabular-nums;
+}
+
+/* Skills Preview */
+.brain-overview__skills {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+  border-radius: 12px;
+  padding: 16px;
+}
+
+.brain-overview__skills-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 12px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.brain-overview__skills-count {
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.brain-overview__skills-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+
+.skill-preview {
+  padding: 6px 12px;
+  background: rgba(255, 255, 255, 0.05);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 20px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.35);
+}
+
+.skill-preview--unlocked {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.brain-overview__view-all {
+  width: 100%;
+  padding: 10px;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.brain-overview__view-all:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.2);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+/* ============================================
+   Skills Tab - Skill Tree
+   ============================================ */
+
+.skill-tree {
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
+  padding: 8px 0;
+}
+
+.skill-tree__tier {
+  display: flex;
+  justify-content: center;
+  gap: 24px;
+  flex-wrap: wrap;
+}
+
+.skill-node-wrapper {
+  position: relative;
+}
+
+.skill-node {
+  position: relative;
+  min-width: 80px;
+  padding: 12px 16px;
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.skill-node:hover {
+  background: rgba(255, 255, 255, 0.06);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+.skill-node--unlocked {
+  background: rgba(255, 255, 255, 0.12);
+  border-color: rgba(255, 255, 255, 0.3);
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.08);
+}
+
+.skill-node--unlocked:hover {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.skill-node--close {
+  animation: skill-pulse 2s ease-in-out infinite;
+}
+
+@keyframes skill-pulse {
+  0%, 100% {
+    border-color: rgba(255, 255, 255, 0.12);
+    box-shadow: none;
+  }
+  50% {
+    border-color: rgba(255, 255, 255, 0.25);
+    box-shadow: 0 0 15px rgba(255, 255, 255, 0.08);
+  }
+}
+
+.skill-node--unavailable {
+  opacity: 0.4;
+}
+
+.skill-node--selected {
+  border-color: rgba(255, 255, 255, 0.4);
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.skill-node__name {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.7);
+  text-align: center;
+}
+
+.skill-node--unlocked .skill-node__name {
+  color: rgba(255, 255, 255, 0.95);
+}
+
+.skill-node__level {
+  font-size: 0.6rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+/* Skill Tooltip */
+.skill-tooltip {
+  position: absolute;
+  top: calc(100% + 12px);
+  left: 50%;
+  transform: translateX(-50%);
+  width: 200px;
+  background: rgba(30, 32, 38, 0.98);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  border-radius: 12px;
+  padding: 14px;
+  z-index: 100;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.4);
+
+  animation: tooltip-fade-in 0.15s ease;
+}
+
+@keyframes tooltip-fade-in {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-4px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+.skill-tooltip__name {
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.95);
+  margin-bottom: 6px;
+}
+
+.skill-tooltip__desc {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+  margin-bottom: 12px;
+}
+
+.skill-tooltip__status {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.skill-tooltip__unlocked {
+  font-size: 0.7rem;
+  color: rgba(150, 220, 150, 0.9);
+  font-weight: 500;
+}
+
+.skill-tooltip__locked {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.skill-tooltip__req {
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.skill-tooltip__progress {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.skill-tooltip__progress-bar {
+  flex: 1;
+  height: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.skill-tooltip__progress-fill {
+  height: 100%;
+  background: rgba(255, 255, 255, 0.5);
+  border-radius: 2px;
+}
+
+.skill-tooltip__progress-text {
+  font-size: 0.65rem;
+  color: rgba(255, 255, 255, 0.4);
+  min-width: 36px;
+  text-align: right;
+}
+
+/* ============================================
+   Knowledge Tab
+   ============================================ */
+
+.brain-knowledge {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.knowledge-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.knowledge-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.knowledge-item__name {
+  width: 100px;
+  font-size: 0.8rem;
+  color: rgba(255, 255, 255, 0.7);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.knowledge-item__bar {
+  flex: 1;
+  display: flex;
+  gap: 3px;
+}
+
+.knowledge-item__segment {
+  flex: 1;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.08);
+  border-radius: 2px;
+}
+
+.knowledge-item__segment--filled {
+  background: rgba(255, 255, 255, 0.5);
+}
+
+.knowledge-item__level {
+  width: 80px;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.4);
+  text-align: right;
+}
+
+.knowledge-unresolved {
+  text-align: center;
+  font-size: 0.75rem;
+  color: rgba(255, 200, 120, 0.7);
+  padding: 12px;
+  background: rgba(255, 200, 120, 0.05);
+  border-radius: 8px;
+}
+
+/* ============================================
+   Thoughts Tab
+   ============================================ */
+
+.brain-thoughts {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.thoughts-section {
   display: flex;
   flex-direction: column;
   gap: 10px;
 }
 
-.brain-panel__topic {
-  padding: 10px 12px;
-  background: rgba(255, 255, 255, 0.02);
-  border: 1px solid rgba(255, 255, 255, 0.05);
-  border-radius: 6px;
-}
-
-.brain-panel__topic-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  margin-bottom: 8px;
-}
-
-.brain-panel__topic-name {
-  font-size: 0.85rem;
-  color: rgba(255, 255, 255, 0.8);
-}
-
-.brain-panel__topic-questions {
+.thoughts-section__title {
   font-size: 0.7rem;
-  color: rgba(255, 200, 100, 0.7);
-  padding: 2px 6px;
-  background: rgba(255, 200, 100, 0.1);
-  border-radius: 10px;
-}
-
-.brain-panel__topic-level {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-}
-
-.brain-panel__topic-level-bar {
-  display: flex;
-  gap: 3px;
-  flex: 1;
-}
-
-.brain-panel__topic-level-segment {
-  height: 4px;
-  flex: 1;
-  background: rgba(255, 255, 255, 0.1);
-  border-radius: 2px;
-}
-
-.brain-panel__topic-level-segment--filled {
-  background: rgba(150, 180, 255, 0.6);
-}
-
-.brain-panel__topic-level-label {
-  font-size: 0.65rem;
+  font-weight: 500;
   color: rgba(255, 255, 255, 0.4);
-  min-width: 70px;
-  text-align: right;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
 }
 
-/* Inner Life */
-.brain-panel__inner-subsection {
-  margin-bottom: 16px;
-}
-
-.brain-panel__inner-subsection:last-child {
-  margin-bottom: 0;
-}
-
-.brain-panel__subsection-title {
-  font-size: 0.7rem;
-  color: rgba(255, 255, 255, 0.35);
-  margin-bottom: 8px;
-}
-
-.brain-panel__thoughts,
-.brain-panel__dreams {
+.thoughts-list {
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.brain-panel__thought,
-.brain-panel__dream {
+.thought-item {
   font-size: 0.8rem;
   color: rgba(255, 255, 255, 0.6);
   font-style: italic;
-  padding: 8px 12px;
-  background: rgba(255, 255, 255, 0.02);
-  border-left: 2px solid rgba(255, 255, 255, 0.1);
-  border-radius: 0 4px 4px 0;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.03);
+  border-left: 2px solid rgba(255, 255, 255, 0.15);
+  border-radius: 0 8px 8px 0;
 }
 
-/* Preferences */
-.brain-panel__preferences {
-  display: flex;
-  gap: 8px;
-  margin-bottom: 8px;
-  font-size: 0.8rem;
+.thought-item--dream {
+  border-left-color: rgba(150, 150, 255, 0.3);
+  background: rgba(150, 150, 255, 0.03);
 }
 
-.brain-panel__pref-label {
-  color: rgba(255, 255, 255, 0.5);
-  min-width: 60px;
+/* ============================================
+   Footer
+   ============================================ */
+
+.brain-footer {
+  padding: 12px 24px;
+  text-align: center;
+  font-size: 0.7rem;
+  color: rgba(255, 255, 255, 0.3);
+  border-top: 1px solid rgba(255, 255, 255, 0.06);
 }
 
-.brain-panel__pref-list {
-  color: rgba(255, 255, 255, 0.7);
-}
+/* ============================================
+   Scrollbar
+   ============================================ */
 
-/* Scrollbar */
-.brain-panel__content::-webkit-scrollbar {
+.brain-content::-webkit-scrollbar {
   width: 6px;
 }
 
-.brain-panel__content::-webkit-scrollbar-track {
+.brain-content::-webkit-scrollbar-track {
   background: transparent;
 }
 
-.brain-panel__content::-webkit-scrollbar-thumb {
+.brain-content::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 3px;
 }
 
-.brain-panel__content::-webkit-scrollbar-thumb:hover {
+.brain-content::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
