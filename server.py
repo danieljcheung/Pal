@@ -11,10 +11,11 @@ from contextlib import asynccontextmanager
 from personality import load_identity, save_identity, update_mood, get_age
 from brain import think, think_stream, extract_memories
 from memory import search_memories, store_memory, format_memories_for_prompt, memory_count, get_all_memories
-from conversation import update_conversation_state, reset_session_state, should_reset_session
+from conversation import update_conversation_state, reset_session_state, should_reset_session, get_pending_question
 from stats import track_message, track_memory_stored, track_check_in
 from skills import check_unlocks
-from topics import load_topics
+from topics import load_topics, add_unresolved_question, save_topics, create_topic
+from inner_life import detect_unanswered_question
 
 
 # Global identity state
@@ -34,6 +35,35 @@ def save_and_update_identity(identity):
     global _identity
     save_identity(identity)
     _identity = identity
+
+
+def check_unanswered_question(identity: dict, user_message: str, topics: dict) -> dict:
+    """
+    Check if there's a pending question from Pal that went unanswered.
+    If so, add it to the topic's unresolved questions.
+
+    Returns the updated topics dict.
+    """
+    pending_question, pending_topic = get_pending_question(identity)
+
+    if not pending_question:
+        return topics
+
+    # Check if the user's message actually answers the question
+    unanswered = detect_unanswered_question(pending_question, user_message)
+
+    if unanswered:
+        # Question went unanswered - add to topic's unresolved list
+        topic_name = pending_topic or "general"
+
+        # Create topic if it doesn't exist
+        if topic_name not in topics:
+            topics = create_topic(topics, topic_name)
+
+        topics = add_unresolved_question(topics, topic_name, pending_question)
+        print(f"[DEBUG] Added unresolved question to '{topic_name}': {pending_question}")
+
+    return topics
 
 
 @asynccontextmanager
@@ -123,6 +153,10 @@ async def chat(request: ChatRequest):
     if not user_message:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
+    # Check if there's an unanswered question from the previous turn
+    topics = load_topics()
+    topics = check_unanswered_question(identity, user_message, topics)
+
     # Search relevant memories
     memories = search_memories(user_message, limit=5)
     memories_str = format_memories_for_prompt(memories)
@@ -146,8 +180,7 @@ async def chat(request: ChatRequest):
         store_memory(mem["content"], mem.get("type", "fact"), "told")
         identity = track_memory_stored(identity)
 
-    # Check for skill unlocks
-    topics = load_topics()
+    # Check for skill unlocks (topics already loaded and updated above)
     identity, newly_unlocked = check_unlocks(identity, topics)
 
     # Save identity
@@ -177,12 +210,16 @@ async def chat_stream(request: ChatRequest):
     if not user_message:
         raise HTTPException(status_code=400, detail="Message cannot be empty")
 
+    # Check if there's an unanswered question from the previous turn
+    topics = load_topics()
+    topics = check_unanswered_question(identity, user_message, topics)
+
     # Search relevant memories
     memories = search_memories(user_message, limit=5)
     memories_str = format_memories_for_prompt(memories)
 
     def generate():
-        nonlocal identity
+        nonlocal identity, topics
         full_response = ""
         buffer = ""  # Buffer to handle mood tags split across chunks
 
@@ -213,8 +250,7 @@ async def chat_stream(request: ChatRequest):
                     store_memory(mem["content"], mem.get("type", "fact"), "told")
                     identity = track_memory_stored(identity)
 
-                # Check for skill unlocks
-                topics = load_topics()
+                # Check for skill unlocks (topics already loaded and updated above)
                 identity, newly_unlocked = check_unlocks(identity, topics)
                 save_and_update_identity(identity)
 

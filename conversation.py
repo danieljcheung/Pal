@@ -36,6 +36,8 @@ def get_conversation_state(identity: dict) -> dict:
         "topics_discussed": [],
         "questions_asked_this_session": [],
         "last_responses": [],
+        "pending_question": None,  # Question Pal asked that needs answering
+        "pending_question_topic": None,  # Topic the pending question belongs to
     })
 
 
@@ -179,6 +181,14 @@ def update_conversation_state(
         if q_normalized not in [q.lower() for q in state["questions_asked_this_session"]]:
             state["questions_asked_this_session"].append(question)
 
+        # Store as pending question to check if user answers it next turn
+        state["pending_question"] = question
+        state["pending_question_topic"] = state.get("current_topic")
+    else:
+        # No question asked, clear pending
+        state["pending_question"] = None
+        state["pending_question_topic"] = None
+
     # Track last responses (keep last 3 key phrases)
     # Extract key phrase from response (first sentence or main clause)
     key_phrase = pal_response.split('.')[0].split('?')[0].strip()
@@ -210,10 +220,23 @@ def reset_session_state(identity: dict) -> dict:
     state["topic_resolved"] = False
     state["questions_asked_this_session"] = []
     state["last_responses"] = []
+    state["pending_question"] = None
+    state["pending_question_topic"] = None
     # Keep topics_discussed - that's long-term memory
 
     identity["conversation_state"] = state
     return identity
+
+
+def get_pending_question(identity: dict) -> tuple[str | None, str | None]:
+    """
+    Get the pending question Pal asked and its topic.
+
+    Returns:
+        Tuple of (question, topic) or (None, None) if no pending question
+    """
+    state = get_conversation_state(identity)
+    return state.get("pending_question"), state.get("pending_question_topic")
 
 
 def format_conversation_state_for_prompt(identity: dict) -> str:
