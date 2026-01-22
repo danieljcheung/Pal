@@ -7,7 +7,6 @@ interface MenuProps {
   isOpen: boolean;
   onClose: () => void;
   onSelectMode: (mode: WindowMode) => void;
-  onOpenHistory: () => void;
   onOpenBrain: () => void;
   onOpenSettings: () => void;
   onHide: () => void;
@@ -29,7 +28,6 @@ function Menu({
   isOpen,
   onClose,
   onSelectMode,
-  onOpenHistory,
   onOpenBrain,
   onOpenSettings,
   onHide,
@@ -85,7 +83,6 @@ function Menu({
     },
     {
       items: [
-        { label: "History", action: onOpenHistory },
         { label: "Pal's Brain", action: onOpenBrain },
         { label: "Settings", action: onOpenSettings },
       ],

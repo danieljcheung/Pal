@@ -47,11 +47,6 @@ function App() {
     setMode(mode);
   }, [setMode]);
 
-  const handleOpenHistory = useCallback(() => {
-    console.log("Opening history...");
-    // TODO: Implement history panel
-  }, []);
-
   const handleOpenBrain = useCallback(() => {
     setBrainPanelOpen(true);
   }, []);
@@ -146,7 +141,6 @@ function App() {
           isOpen={menuOpen}
           onClose={handleMenuClose}
           onSelectMode={handleSelectMode}
-          onOpenHistory={handleOpenHistory}
           onOpenBrain={handleOpenBrain}
           onOpenSettings={handleOpenSettings}
           onHide={handleHide}
