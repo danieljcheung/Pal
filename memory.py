@@ -135,8 +135,15 @@ def search_memories(query: str, limit: int = 5) -> list[dict]:
                 "type": r["type"],
                 "source": r["source"],
                 "timestamp": r["timestamp"],
+                "distance": r.get("_distance", None),  # Include similarity score for debugging
             }
         )
+
+    # Debug: log what was found
+    if memories:
+        print(f"[DEBUG] Memory search for '{query[:50]}...' found {len(memories)} results:")
+        for m in memories[:3]:
+            print(f"  - {m['content'][:60]}... (type={m['type']}, dist={m.get('distance', '?')})")
 
     return memories
 

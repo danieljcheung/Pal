@@ -211,52 +211,52 @@ def process_with_claude(
         }
     """
     if content_type == "search_results":
-        prompt = f"""I searched the web and found these results. Help me understand them.
+        prompt = f"""I searched the web. Extract key facts to remember.
 
 Search results:
 {content}
 
 Respond in this exact JSON format:
 {{
-    "summary": "2-3 sentence summary of what I learned",
-    "facts": ["fact 1", "fact 2", "fact 3"],
-    "topic": "main topic name (2-5 words)",
-    "questions": ["question I still have about this"]
+    "summary": "ONE sentence: what this topic is (simple definition)",
+    "facts": ["specific fact 1", "specific fact 2", "specific fact 3"],
+    "topic": "topic name (2-4 words, lowercase)",
+    "questions": ["one specific thing I don't understand"]
 }}
 
-Keep facts simple and memorable. Questions should be things I don't fully understand yet."""
+IMPORTANT: Summary must be ONE short sentence defining what the topic IS. Not what I learned."""
 
     elif content_type == "article":
-        prompt = f"""I'm reading this content from {source}. Help me understand and remember it.
+        prompt = f"""I'm reading content from {source}. Extract key facts to remember.
 
 Content:
 {content}
 
 Respond in this exact JSON format:
 {{
-    "summary": "2-3 sentence summary of what this is about",
-    "facts": ["key fact 1", "key fact 2", "key fact 3", "key fact 4", "key fact 5"],
-    "topic": "main topic name (2-5 words)",
-    "questions": ["thing I'm confused about", "thing I want to know more about"]
+    "summary": "ONE sentence: what this topic is (simple definition)",
+    "facts": ["specific fact 1", "specific fact 2", "specific fact 3", "specific fact 4", "specific fact 5"],
+    "topic": "topic name (2-4 words, lowercase)",
+    "questions": ["one specific thing mentioned that I don't understand"]
 }}
 
-Extract the most important facts I should remember. Questions are things that weren't fully explained or that I'm curious about."""
+IMPORTANT: Summary must be ONE short sentence defining what the topic IS. Facts should be specific and memorable."""
 
     else:  # direct text
-        prompt = f"""Someone shared this information with me. Help me understand and remember it.
+        prompt = f"""Someone shared information with me. Extract key facts to remember.
 
 Text:
 {content}
 
 Respond in this exact JSON format:
 {{
-    "summary": "2-3 sentence summary of what this is about",
-    "facts": ["key fact 1", "key fact 2", "key fact 3"],
-    "topic": "main topic name (2-5 words)",
-    "questions": ["question I have about this"]
+    "summary": "ONE sentence: what this topic is (simple definition)",
+    "facts": ["specific fact 1", "specific fact 2", "specific fact 3"],
+    "topic": "topic name (2-4 words, lowercase)",
+    "questions": ["one thing I want to know more about"]
 }}
 
-Extract the key facts I should remember. Questions are things I'm curious about or want to understand better."""
+IMPORTANT: Summary must be ONE short sentence. Facts should be specific and memorable."""
 
     try:
         response = client.messages.create(
@@ -315,11 +315,14 @@ def store_research_results(
 
     memory_ids = []
 
-    # Store each fact as a memory
+    # Store each fact as a memory, prefixed with topic for better retrieval
     for fact in facts:
         if fact and len(fact) > 10:  # Skip very short facts
+            # Prefix with topic to improve semantic search retrieval
+            # e.g., "strength training: muscles grow through progressive overload"
+            content_with_topic = f"{topic_name}: {fact}"
             memory_id = store_memory(
-                content=fact,
+                content=content_with_topic,
                 memory_type="learned",
                 source=source,
             )

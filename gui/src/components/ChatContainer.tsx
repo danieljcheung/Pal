@@ -47,17 +47,20 @@ function formatResearchResponse(result: ResearchResponse): string {
     return result.error || "I couldn't do that research.";
   }
 
-  let response = result.summary;
+  // Format: "I read about [topic]. [definition] I remembered X things. [question]?"
+  let response = `I read about ${result.topic}. ${result.summary}`;
 
-  // Add facts stored
+  // Add facts stored count
   if (result.facts_stored > 0) {
-    response += ` I remembered ${result.facts_stored} thing${result.facts_stored > 1 ? "s" : ""} about ${result.topic}.`;
+    response += ` I remembered ${result.facts_stored} thing${result.facts_stored > 1 ? "s" : ""}.`;
   }
 
-  // Add questions
+  // Add one question if present
   if (result.questions && result.questions.length > 0) {
     const question = result.questions[0];
-    response += ` I'm still wondering though - ${question}`;
+    // Make sure question ends properly
+    const cleanQuestion = question.replace(/[?.!]*$/, "");
+    response += ` ${cleanQuestion} though?`;
   }
 
   return response;
