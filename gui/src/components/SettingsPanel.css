@@ -1,0 +1,355 @@
+/* Settings Panel - Apple Glass Style */
+
+.settings-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(8px);
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: settings-fade-in 0.2s ease-out;
+}
+
+@keyframes settings-fade-in {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+
+.settings-panel {
+  position: relative;
+  width: 90%;
+  max-width: 360px;
+  max-height: 85vh;
+  background: rgba(30, 30, 35, 0.95);
+  border-radius: 16px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  box-shadow: 0 25px 50px rgba(0, 0, 0, 0.5);
+  display: flex;
+  flex-direction: column;
+  animation: settings-slide-up 0.25s ease-out;
+  overflow: hidden;
+}
+
+@keyframes settings-slide-up {
+  from {
+    transform: translateY(20px);
+    opacity: 0;
+  }
+  to {
+    transform: translateY(0);
+    opacity: 1;
+  }
+}
+
+.settings-panel__close {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 28px;
+  height: 28px;
+  border: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 50%;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 18px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 10;
+}
+
+.settings-panel__close:hover {
+  background: rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Header */
+.settings-header {
+  padding: 20px 24px 16px;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-header h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: white;
+}
+
+/* Content */
+.settings-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 8px 24px 24px;
+}
+
+.settings-loading {
+  padding: 40px;
+  text-align: center;
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* Sections */
+.settings-section {
+  padding: 16px 0;
+}
+
+.settings-section:not(:last-child) {
+  border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.settings-section__title {
+  margin: 0 0 12px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: rgba(255, 255, 255, 0.4);
+}
+
+.settings-section--danger .settings-section__title {
+  color: rgba(255, 100, 100, 0.6);
+}
+
+/* Fields */
+.settings-field {
+  margin-bottom: 16px;
+}
+
+.settings-field:last-child {
+  margin-bottom: 0;
+}
+
+.settings-field__label {
+  display: block;
+  margin-bottom: 6px;
+  font-size: 13px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.settings-field__input {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  transition: all 0.15s ease;
+}
+
+.settings-field__input:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(100, 150, 255, 0.5);
+}
+
+.settings-field__input::placeholder {
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.settings-field__select {
+  width: 100%;
+  padding: 10px 12px;
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.settings-field__select:focus {
+  outline: none;
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(100, 150, 255, 0.5);
+}
+
+.settings-field__select option {
+  background: #1e1e23;
+  color: white;
+}
+
+.settings-field__description {
+  margin: 0 0 12px;
+  font-size: 13px;
+  color: rgba(255, 255, 255, 0.5);
+  line-height: 1.4;
+}
+
+/* Toggle fields */
+.settings-field--toggle {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.settings-field--toggle .settings-field__label {
+  margin-bottom: 0;
+}
+
+/* Toggle switch */
+.settings-toggle {
+  position: relative;
+  width: 44px;
+  height: 26px;
+  padding: 0;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 13px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.settings-toggle--on {
+  background: rgba(100, 200, 100, 0.6);
+}
+
+.settings-toggle__knob {
+  position: absolute;
+  top: 3px;
+  left: 3px;
+  width: 20px;
+  height: 20px;
+  background: white;
+  border-radius: 50%;
+  transition: transform 0.2s ease;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.settings-toggle--on .settings-toggle__knob {
+  transform: translateX(18px);
+}
+
+/* API Key field */
+.settings-field__api-key {
+  display: flex;
+  gap: 8px;
+}
+
+.settings-field__api-key .settings-field__input {
+  flex: 1;
+}
+
+.settings-field__toggle-visibility {
+  padding: 0 12px;
+  background: rgba(255, 255, 255, 0.1);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  border-radius: 8px;
+  color: rgba(255, 255, 255, 0.6);
+  font-size: 12px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.settings-field__toggle-visibility:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+/* Buttons */
+.settings-button {
+  padding: 10px 20px;
+  border: none;
+  border-radius: 8px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.settings-button--primary {
+  background: rgba(100, 150, 255, 0.8);
+  color: white;
+}
+
+.settings-button--primary:hover {
+  background: rgba(100, 150, 255, 1);
+}
+
+.settings-button--primary:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.settings-button--secondary {
+  background: rgba(255, 255, 255, 0.1);
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.settings-button--secondary:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: white;
+}
+
+.settings-button--danger {
+  background: rgba(255, 80, 80, 0.8);
+  color: white;
+}
+
+.settings-button--danger:hover {
+  background: rgba(255, 80, 80, 1);
+}
+
+/* Footer */
+.settings-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  padding: 16px 24px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  background: rgba(0, 0, 0, 0.2);
+}
+
+/* Confirmation Dialog */
+.settings-confirm-overlay {
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  animation: settings-fade-in 0.15s ease-out;
+}
+
+.settings-confirm {
+  width: 90%;
+  max-width: 280px;
+  padding: 24px;
+  background: rgba(40, 40, 45, 0.98);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+  animation: settings-slide-up 0.2s ease-out;
+}
+
+.settings-confirm h3 {
+  margin: 0 0 12px;
+  font-size: 18px;
+  font-weight: 600;
+  color: white;
+}
+
+.settings-confirm p {
+  margin: 0 0 20px;
+  font-size: 14px;
+  color: rgba(255, 255, 255, 0.6);
+  line-height: 1.4;
+}
+
+.settings-confirm__actions {
+  display: flex;
+  gap: 10px;
+  justify-content: center;
+}

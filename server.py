@@ -375,6 +375,39 @@ async def reset_session():
     return {"status": "ok"}
 
 
+@app.post("/reset-pal")
+async def reset_pal():
+    """Reset Pal completely - erase all memories, topics, and identity."""
+    import shutil
+    from pathlib import Path
+
+    data_dir = Path(__file__).parent / "data"
+
+    try:
+        # Remove memories directory
+        memories_dir = data_dir / "memories"
+        if memories_dir.exists():
+            shutil.rmtree(memories_dir)
+
+        # Remove identity file
+        identity_file = data_dir / "identity.json"
+        if identity_file.exists():
+            identity_file.unlink()
+
+        # Remove topics file
+        topics_file = data_dir / "topics.json"
+        if topics_file.exists():
+            topics_file.unlink()
+
+        # Reset global identity state
+        global _identity
+        _identity = None
+
+        return {"status": "ok"}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
 def _check_research_skill() -> tuple[bool, ResearchResponse | None]:
     """Check if research skill is unlocked. Returns (is_unlocked, error_response)."""
     identity = get_identity()

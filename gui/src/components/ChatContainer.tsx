@@ -12,6 +12,9 @@ import {
   type Mood,
   type ResearchResponse,
 } from "../api";
+import { useSettings } from "../contexts/SettingsContext";
+import { playChime, resumeAudio } from "../utils/sound";
+import { sendNotification } from "../utils/notifications";
 import "./ChatContainer.css";
 
 type WindowMode = "full" | "widget" | "floating";
@@ -89,6 +92,31 @@ function ChatContainer({
   const inputRef = useRef<ChatInputHandle>(null);
   const idleTimeoutRef = useRef<number | null>(null);
   const lastResponseTimeRef = useRef<number>(Date.now());
+  const { settings } = useSettings();
+
+  // Play chime when Pal finishes speaking (if sounds enabled)
+  const playResponseSound = useCallback(() => {
+    if (settings.sounds_enabled) {
+      playChime();
+    }
+  }, [settings.sounds_enabled]);
+
+  // Resume audio context on first user interaction
+  useEffect(() => {
+    const handleInteraction = () => {
+      resumeAudio();
+      document.removeEventListener("click", handleInteraction);
+      document.removeEventListener("keydown", handleInteraction);
+    };
+
+    document.addEventListener("click", handleInteraction);
+    document.addEventListener("keydown", handleInteraction);
+
+    return () => {
+      document.removeEventListener("click", handleInteraction);
+      document.removeEventListener("keydown", handleInteraction);
+    };
+  }, []);
 
   // Reset idle timeout
   const resetIdleTimeout = useCallback(() => {
@@ -100,7 +128,7 @@ function ChatContainer({
 
     // Only set timeout if there's a message waiting for response
     if (currentMessage && currentMessage.from === "pal" && !isThinking && !isStreaming) {
-      idleTimeoutRef.current = window.setTimeout(() => {
+      idleTimeoutRef.current = window.setTimeout(async () => {
         // Pick a random idle message
         const idleMsg = IDLE_MESSAGES[Math.floor(Math.random() * IDLE_MESSAGES.length)];
         setCurrentMessage({
@@ -110,6 +138,15 @@ function ChatContainer({
         });
         setMood("sleepy");
 
+        // Send notification if enabled (for idle thoughts)
+        if (settings.notifications_enabled && idleMsg !== "...") {
+          try {
+            await sendNotification(settings.pal_name || "Pal", idleMsg);
+          } catch {
+            // Ignore notification errors
+          }
+        }
+
         // After a moment, clear the message
         setTimeout(() => {
           setCurrentMessage(null);
@@ -117,7 +154,7 @@ function ChatContainer({
         }, 2000);
       }, IDLE_TIMEOUT);
     }
-  }, [currentMessage, isThinking, isStreaming]);
+  }, [currentMessage, isThinking, isStreaming, settings.notifications_enabled, settings.pal_name]);
 
   // Start idle timer when Pal finishes speaking
   useEffect(() => {
@@ -235,9 +272,10 @@ function ChatContainer({
           setMood("confused");
         }
 
-        // Brief bounce effect
+        // Brief bounce effect and sound
         setIsSpeaking(true);
         setTimeout(() => setIsSpeaking(false), 250);
+        playResponseSound();
 
       } catch (err) {
         setMood("confused");
@@ -289,9 +327,10 @@ function ChatContainer({
           setIsStreaming(false);
           setMood(finalMood);
 
-          // Brief bounce effect at completion
+          // Brief bounce effect at completion and sound
           setIsSpeaking(true);
           setTimeout(() => setIsSpeaking(false), 250);
+          playResponseSound();
 
           // Log skill unlock if any
           if (skillUnlocked) {

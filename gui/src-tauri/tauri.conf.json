@@ -13,6 +13,7 @@
     "windows": [
       {
         "title": "Pal",
+        "label": "main",
         "width": 400,
         "height": 500,
         "minWidth": 300,
@@ -38,5 +39,10 @@
       "icons/icon.icns",
       "icons/icon.ico"
     ]
+  },
+  "plugins": {
+    "notification": {
+      "all": true
+    }
   }
 }

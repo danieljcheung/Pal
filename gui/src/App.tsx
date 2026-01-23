@@ -1,18 +1,48 @@
-import { useState, useCallback } from "react";
+import { useState, useCallback, useEffect, useRef } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { invoke } from "@tauri-apps/api/core";
+import { listen } from "@tauri-apps/api/event";
 import ChatContainer from "./components/ChatContainer";
 import Menu from "./components/Menu";
 import BrainPanel from "./components/BrainPanel";
+import SettingsPanel from "./components/SettingsPanel";
+import { useSettings } from "./contexts/SettingsContext";
 import "./App.css";
 
 type WindowMode = "full" | "widget" | "floating";
+
+// Hide for 1 hour duration in ms
+const HIDE_DURATION = 60 * 60 * 1000;
 
 function App() {
   const [headerVisible, setHeaderVisible] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const [windowMode, setWindowMode] = useState<WindowMode>("full");
   const [brainPanelOpen, setBrainPanelOpen] = useState(false);
+  const [settingsPanelOpen, setSettingsPanelOpen] = useState(false);
+  const hideTimerRef = useRef<number | null>(null);
+  const { settings, updateSettings } = useSettings();
+
+  // Listen for mode changes from tray menu
+  useEffect(() => {
+    const unlisten = listen<string>("mode-changed", (event) => {
+      setWindowMode(event.payload as WindowMode);
+    });
+
+    return () => {
+      unlisten.then((fn) => fn());
+    };
+  }, []);
+
+  // Set default mode from settings on startup
+  useEffect(() => {
+    if (settings.default_mode) {
+      const mode = settings.default_mode as WindowMode;
+      if (mode !== windowMode) {
+        setMode(mode);
+      }
+    }
+  }, [settings.default_mode]);
 
   const handleClose = async () => {
     const window = getCurrentWindow();
@@ -52,13 +82,30 @@ function App() {
   }, []);
 
   const handleOpenSettings = useCallback(() => {
-    console.log("Opening settings...");
-    // TODO: Implement settings panel
+    setSettingsPanelOpen(true);
   }, []);
 
-  const handleHide = useCallback(() => {
-    console.log("Hiding for 1 hour...");
-    // TODO: Implement hide functionality
+  const handleHide = useCallback(async () => {
+    // Hide window for 1 hour
+    try {
+      await invoke("hide_window");
+
+      // Clear any existing timer
+      if (hideTimerRef.current) {
+        clearTimeout(hideTimerRef.current);
+      }
+
+      // Set timer to show window after 1 hour
+      hideTimerRef.current = window.setTimeout(async () => {
+        try {
+          await invoke("show_window");
+        } catch (err) {
+          console.error("Failed to show window:", err);
+        }
+      }, HIDE_DURATION);
+    } catch (err) {
+      console.error("Failed to hide window:", err);
+    }
   }, []);
 
   const handleQuit = useCallback(async () => {
@@ -152,6 +199,13 @@ function App() {
         <BrainPanel
           isOpen={brainPanelOpen}
           onClose={() => setBrainPanelOpen(false)}
+        />
+
+        {/* Settings panel */}
+        <SettingsPanel
+          isOpen={settingsPanelOpen}
+          onClose={() => setSettingsPanelOpen(false)}
+          onSettingsChange={updateSettings}
         />
 
         {/* Main content */}
