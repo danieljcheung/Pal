@@ -31,37 +31,41 @@ def extract_text_from_html(html: str, url: str = "") -> str:
     """
     soup = BeautifulSoup(html, "html.parser")
 
+    # Get the title first
+    title = ""
+    title_tag = soup.find("title")
+    if title_tag:
+        title = title_tag.get_text(strip=True)
+
     # Remove unwanted elements
     for element in soup.find_all([
-        "script", "style", "nav", "header", "footer", "aside",
+        "script", "style", "nav", "footer", "aside",
         "form", "iframe", "noscript", "svg", "button"
     ]):
         element.decompose()
 
-    # Remove elements with common ad/nav classes
-    ad_patterns = ["ad", "advertisement", "sidebar", "nav", "menu", "footer", "header", "comment"]
-    for pattern in ad_patterns:
-        for element in soup.find_all(class_=re.compile(pattern, re.I)):
-            element.decompose()
-        for element in soup.find_all(id=re.compile(pattern, re.I)):
-            element.decompose()
-
-    # Try to find main content
+    # Try to find main content - be more aggressive about finding content
     main_content = None
+    candidates = []
 
     # Look for article or main tags first
-    for tag in ["article", "main", "[role='main']"]:
-        main_content = soup.select_one(tag)
-        if main_content:
-            break
+    for tag in ["article", "main", "[role='main']", ".post", ".article", ".content", "#content", "#main"]:
+        found = soup.select(tag)
+        candidates.extend(found)
 
-    # Fall back to common content div classes
-    if not main_content:
-        content_patterns = ["content", "post", "entry", "article", "body"]
-        for pattern in content_patterns:
-            main_content = soup.find(class_=re.compile(f"^{pattern}|{pattern}$", re.I))
-            if main_content:
-                break
+    # Also look for divs with substantial paragraph content
+    for div in soup.find_all(["div", "section"]):
+        paragraphs = div.find_all("p")
+        if len(paragraphs) >= 2:
+            total_text = sum(len(p.get_text()) for p in paragraphs)
+            if total_text > 200:
+                candidates.append(div)
+
+    # Pick the candidate with the most text content
+    if candidates:
+        best = max(candidates, key=lambda x: len(x.get_text()))
+        if len(best.get_text()) > 100:
+            main_content = best
 
     # Use body if nothing else found
     if not main_content:
@@ -70,9 +74,19 @@ def extract_text_from_html(html: str, url: str = "") -> str:
     # Extract text
     text = main_content.get_text(separator="\n", strip=True)
 
-    # Clean up whitespace
-    lines = [line.strip() for line in text.split("\n") if line.strip()]
+    # Clean up whitespace - keep lines with actual content
+    lines = []
+    for line in text.split("\n"):
+        line = line.strip()
+        # Skip very short lines that are likely navigation
+        if line and (len(line) > 20 or any(c in line for c in ".!?,")):
+            lines.append(line)
+
     text = "\n".join(lines)
+
+    # Add title at the beginning if we have it and it's not already there
+    if title and title not in text[:200]:
+        text = f"{title}\n\n{text}"
 
     # Limit text length (Claude context)
     max_chars = 15000
@@ -119,8 +133,12 @@ def fetch_url(url: str) -> tuple[str, str | None]:
             return "", f"I can't read this type of content ({content_type})."
 
         if not text or len(text) < 50:
-            return "", "I couldn't extract any useful content from that page."
+            # Debug: log what we got
+            print(f"[DEBUG] URL fetch got {len(text) if text else 0} chars from {url}")
+            print(f"[DEBUG] First 200 chars: {text[:200] if text else 'empty'}")
+            return "", "I couldn't extract any useful content from that page. It might require JavaScript to load."
 
+        print(f"[DEBUG] Successfully extracted {len(text)} chars from {url}")
         return text, None
 
     except requests.exceptions.Timeout:
