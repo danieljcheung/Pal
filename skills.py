@@ -50,7 +50,7 @@ UNLOCK_CONDITIONS = {
         stats.get("messages_exchanged", 0) >= 100 and
         stats.get("corrections", 0) >= 10
     ),
-    "research": lambda stats, topics: count_unresolved_topics(topics) >= 3,
+    "research": lambda stats, topics: count_unresolved_questions(topics) >= 3,
     "tasks": lambda stats, topics: stats.get("reminders_delivered", 0) >= 5,
     "summarize": lambda stats, topics: stats.get("memories_stored", 0) >= 100,
     "concern": lambda stats, topics: stats.get("emotional_shares", 0) >= 10,
@@ -72,12 +72,13 @@ SKILL_NOTICES = {
 }
 
 
-def count_unresolved_topics(topics: dict) -> int:
-    """Count topics with unresolved questions."""
+def count_unresolved_questions(topics: dict) -> int:
+    """Count total unresolved questions across all topics."""
     count = 0
     for topic_data in topics.values():
-        if topic_data.get("unresolved"):
-            count += 1
+        unresolved = topic_data.get("unresolved", [])
+        if isinstance(unresolved, list):
+            count += len(unresolved)
     return count
 
 
