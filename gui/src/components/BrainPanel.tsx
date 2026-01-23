@@ -85,9 +85,9 @@ const SKILL_TREE: Record<string, {
     tier: 2,
     requires: ["concern"],
     description: "Ask follow-up questions",
-    unlockReq: "3 topics with questions",
+    unlockReq: "3 unresolved questions",
     getProgress: (_, topics) => ({
-      current: Object.values(topics).filter(t => t.unresolved?.length > 0).length,
+      current: Object.values(topics).reduce((sum, t) => sum + (t.unresolved?.length || 0), 0),
       target: 3,
     }),
   },
